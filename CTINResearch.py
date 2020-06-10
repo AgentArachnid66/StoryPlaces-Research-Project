@@ -27,23 +27,20 @@ pagePerUser  = pd.DataFrame()
 
 # The first thing iI did was remove any rows that don't have any page IDs,
 # Therefore they didn't read anything and shouldn't be included in the count
-pagePerUser = dataSet.copy().dropna(how='any', subset=['pageId'])
-
-
+validPages = dataSet.copy().dropna(how='any', subset=['pageId'])
 
 # After that, it was a simple case of grouping them by user and count the number
 # Of occurances and store that as it's own variable
-pagePerUser = pagePerUser.groupby('user', as_index=False)['pageId'].count()
+pagePerUser = validPages.groupby('user', as_index=False)['pageId'].count()
 #Print the first 20 users with the pages read for each user
-print(pagePerUser[["user", "pageId"]].head(20))
+pagePerUser = pagePerUser[["user", "pageId"]]
+pagePerUser.rename(columns={"pageId" : "pagesRead"}, inplace=True)
+print("User: " +pagePerUser['user'].astype(str) +"    Pages Read: " +pagePerUser['pagesRead'].astype(str))
 
 #%%
-# This cell is the Exploratory Data Analysis - Page Frequency
+# This cell is the Exploratory Data Analysis - Page Reading Frequency 
 
-
-
-
-
-
-
+pageFreq = validPages.groupby('pageId', as_index=False).size().reset_index()
+pageFreq.columns = ['pageId', 'pageFreq']
+print("Page: " +pageFreq['pageId'].astype(str) +"  Read Frequency: " +pageFreq['pageFreq'].astype(str))
 
