@@ -25,7 +25,7 @@ print("The number of users is " +str(userGrp.ngroups))
 # I made a new dataframe to save this data
 pagePerUser  = pd.DataFrame()
 
-# The first thing iI did was remove any rows that don't have any page IDs,
+# The first thing I did was remove any rows that don't have any page IDs,
 # Therefore they didn't read anything and shouldn't be included in the count
 validPages = dataSet.copy().dropna(how='any', subset=['pageId'])
 
@@ -40,7 +40,19 @@ print("User: " +pagePerUser['user'].astype(str) +"    Pages Read: " +pagePerUser
 #%%
 # This cell is the Exploratory Data Analysis - Page Reading Frequency 
 
+# Like the cell above, I split them  this time by page ID and the size of the
+# new groups. This should get the number of times it showed up in the logs
+# therefore the number of times players went onto that page 
+# therefore the page reading frequency.
 pageFreq = validPages.groupby('pageId', as_index=False).size().reset_index()
+#In the generated DataFrame above, the pageFreq column was named 0 and this 
+# just changes it back to human readable terms and lets me reference it in
+# other parts of the script
 pageFreq.columns = ['pageId', 'pageFreq']
 print("Page: " +pageFreq['pageId'].astype(str) +"  Read Frequency: " +pageFreq['pageFreq'].astype(str))
 
+#%%
+#This cell is the Exploratory Data Analysis - Story Frequency By User
+
+#%%
+#This cell is the Exploratory Data Analysis - Time Spent on each Story
