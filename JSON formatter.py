@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-import pathlib
-
-# No idea how, but I managed to make a JSON formatter without using the
-# JSON library. 
-
+import os
 
 
 def get_file_as_String(fileToConvert):
@@ -13,13 +9,11 @@ def get_file_as_String(fileToConvert):
     data = open(file = fileToConvert)
     data = data.read()
     return data
-    return data
 
 # Place file path here and run the code to get the formatted JSON file
 # It will be stored as a JSON file local to the project
 fileName = "DataSet/logevent-launchsubset.json"
 
-    
 
 
 dataSet = get_file_as_String(fileName)
@@ -50,10 +44,19 @@ finalString = addCommas
 if addCommas[0] != "[":
     finalString = "[" +addCommas +"]"
     
+# I remove the file extension so that I can write is as a JSON using the 
+# original file name with the prefix "Modified" to differentiate it from the 
+# original file
+fileNameWOext = os.path.splitext(fileName)[0]
+# I saved my dataSets in a separate folder, so I had to remove that directory
+fileNameWOext = re.sub(r'DataSet\/', r'', fileNameWOext)
+saveFile = "Modified" +fileNameWOext +".json"
+
+
 #This final part of the code will save the string as a JSON file
 # As the string is valid JSON already, this won't cause any issues
 # But I had issues when I used json.dump
-with open("Modifiedlogevent-launchsubset.json", "w") as f:
+with open(saveFile, "w") as f:
     f.write(finalString)
 print("Produced JSON file")
     
