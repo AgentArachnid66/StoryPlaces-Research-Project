@@ -9,8 +9,9 @@ import re
 #%%
 # This cell gets the dataset and loads it into a variable. Much more efficient
 # to do this once instead of doing it every time the program is run.
-dataSet = pd.read_json("Modifiedlogevent-launchsubset.json", convert_dates=True)
+dataSet = pd.read_json("Modifiedlogevent-launchsubset.json", convert_dates=False)
 dataSet.set_index("_id")
+dataSet['date'] = pd.to_datetime(dataSet['date'])
 
 #%%
 # This cell is to get required information for coding a lot quicker and easier.
@@ -137,8 +138,7 @@ print(organiseDescribe(timePage['timeOnPage'].describe()))
 # page and count if there are any pages that are the most likely to be the 
 # exit point.
 
-sortExit = (exitPoints.groupby('pageId').size().sort_values(ascending = False))
-print(sortExit.head())
+sortExit = (exitPoints.groupby('pageId').size().sort_values(ascending=False)).reset_index()
 sortExit.to_csv("ExitPoints.csv")
 
 #%%
@@ -158,8 +158,20 @@ filteredUserTime = userTime[timeFilter]
 
 # Calculates the time difference between timestamps
 filteredUserTime["TotalActiveTime"] = userTime['logout time'] - userTime['login time']
-
+filteredUserTime['TotalActiveTime'] = pd.to_datetime(filteredUserTime['TotalActiveTime'])
 # If I had left in the users who only looked at one page,
 # These results would have been skewed
 print(organiseDescribe(filteredUserTime['TotalActiveTime'].describe()))
 filteredUserTime.to_csv("TotalTimePerUser.csv")
+
+#%%
+
+#This cell is the Exploratory Data Analysis - Page Visits Reader Frequency
+
+#This is how many people visited a certain number of pages
+
+pageVisitPerUser = pagePerUser.copy(deep=True)['pagesRead'].value_counts().reset_index().sort_values(['pagesRead', 'index'], ascending = False).reset_index()
+pageVisitPerUser = pageVisitPerUser[['index', 'pagesRead']].rename(columns={'index':'NumberPagesRead','pagesRead' : 'Frequency'})
+print(pageVisitPerUser)
+
+pageVisitPerUser.to_csv("PageVisitsReaderFrequency.csv")
