@@ -23,8 +23,8 @@ def organiseDescribe(value):
     removeWhiteSpace = re.sub(r'  ', r'', str(value))
     addColon  = re.sub(r' ', r':', removeWhiteSpace)
     rewriteSTD = re.sub("std", "Standard Deviation:", addColon)
-    rewriteMedian = re.sub(r'50\%', "Median", rewriteSTD)
-    return rewriteMedian
+#    rewriteMedian = re.sub(r'50\%', "Median", rewriteSTD)
+    return rewriteSTD
 
 fileData = ""
 
@@ -44,6 +44,8 @@ pagePerUser  = pd.DataFrame()
 # The first thing I did was remove any rows that don't have any page IDs,
 # Therefore they didn't read anything and shouldn't be included in the count
 validPages = dataSet.copy(deep=True).dropna(how='any', subset=['pageId'])
+validPages = validPages.drop_duplicates(subset = ['date', 'user'])
+
 
 # After that, it was a simple case of grouping them by user and count the number
 # Of occurances and store that as it's own variable
@@ -98,8 +100,9 @@ storyFreqU = validStories[["user", "storyId"]].groupby(['storyId','user'])
 # This cell is the Exploratory Data Analysis - Time Spent on each Page
 
 # Checks if any rows have no date information or page Id and copies the 
-# data frame to the variable.
+# data frame to the variable. Then drop any that duplicate dates
 validPageTimes = dataSet.copy().dropna(how='any', subset=['date', 'pageId'])
+validPageTimes = validPageTimes.drop_duplicates(subset = ['date', 'user'])
 
 # Generates a new DataFrame for the time spent on each page based on user, 
 # date and page id. 
@@ -158,7 +161,7 @@ filteredUserTime = userTime[timeFilter]
 
 # Calculates the time difference between timestamps
 filteredUserTime["TotalActiveTime"] = userTime['logout time'] - userTime['login time']
-filteredUserTime['TotalActiveTime'] = pd.to_datetime(filteredUserTime['TotalActiveTime'])
+#filteredUserTime['TotalActiveTime'] = pd.to_datetime(filteredUserTime['TotalActiveTime'])
 # If I had left in the users who only looked at one page,
 # These results would have been skewed
 print(organiseDescribe(filteredUserTime['TotalActiveTime'].describe()))
@@ -170,7 +173,7 @@ filteredUserTime.to_csv("TotalTimePerUser.csv")
 
 #This is how many people visited a certain number of pages
 
-pageVisitPerUser = pagePerUser.copy(deep=True)['pagesRead'].value_counts().reset_index().sort_values(['pagesRead', 'index'], ascending = False).reset_index()
+pageVisitPerUser = pagePerUser.copy(deep=True)['pagesRead'].value_counts().reset_index().sort_values(['index']).reset_index()
 pageVisitPerUser = pageVisitPerUser[['index', 'pagesRead']].rename(columns={'index':'NumberPagesRead','pagesRead' : 'Frequency'})
 print(pageVisitPerUser)
 

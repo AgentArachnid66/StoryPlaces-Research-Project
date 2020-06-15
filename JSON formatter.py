@@ -12,7 +12,7 @@ def get_file_as_String(fileToConvert):
 
 # Place file path here and run the code to get the formatted JSON file
 # It will be stored as a JSON file local to the project
-fileName = "DataSet/logevent-launchsubset.json"
+fileName = "C:/Users/brown/Downloads/sh.json"
 
 
 
