@@ -21,8 +21,8 @@ dataSet.set_index("_id")
 # they are easier to read. 
 
 # The exit points DataFrame
-DPRexitPoints = pd.read_csv("ExitPoints.csv").drop('Unnamed: 0', 1)
-DPRexitPoints = DPRexitPoints.rename(columns={"0" : "NumExitedHere"})
+exitPoints = pd.read_csv("ExitPoints.csv").drop('Unnamed: 0', 1)
+exitPoints = exitPoints.rename(columns={"0" : "NumExitedHere"})
 
 # The Page Per User DataFrame
 DPRpagePerUser = pd.read_csv("PagePerUserDF.csv").drop('Unnamed: 0', 1)
@@ -97,11 +97,13 @@ DetectDeepReads = DetectDeepReads.dropna(subset=['TotalActiveTime'])
 # I made a new dictionary that will hold the different classes of reader
 # I did this to make it easily expandable and to make it easy to change the class
 # types
-classes = { "" : np.nan,
-            "HNumber Pages HTotal Active Time" : "Avid Reader",
-           "HNumber Pages LTotal Active Time" : "Speed Reader",
-           "LNumber Pages HTotal Active Time" : "Intense Reader",
-           "LNumber Pages LTotal Active Time" : "Checker"}
+classes = [[
+    "Checker",
+    "Intense Reader"    
+    ],[
+       "Speed Read"
+       "Avid Reader"
+       ]]
 
 
 # These are filters to make the function's job a lot easier. They store 
@@ -116,22 +118,29 @@ DetectDeepReads['TotTimeActFilter'] = pd.to_timedelta(DetectDeepReads['TotalActi
 def get_class(NumPageFilter, TotActTimeFilter):
     key = ""
     if(NumPageFilter):
-        key += "HNumber Pages "
+        key += "1 "
     else:
-        key += "LNumber Pages "
+        key += "0 "
     if(TotActTimeFilter):
-        key += "HTotal Active Time"
+        key += "1 "
     else:
-        key += "LTotal Active Time"
+        key += "0 "
+
+    key = get_key(key)
     
     return classes[key]
     
+def get_key(value):
+    key = value.split()
+    for character in key:
+        character = int(character)
+        
+    return key
+
 DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.NumPageFilter, x.TotTimeActFilter), axis = 1)
 
 ReaderClass = DetectDeepReads.groupby('reader class').count()
 ReaderClass = ReaderClass['user']
-
-
 
 #%%
 # This cell is for average distance walked by user
@@ -148,32 +157,46 @@ sampleData = sampleData.sort_values(by=['user', 'date'])
 sampleData['Latitude'] = sampleData['pageId'].map(pageData.set_index('id')['Latitude'])
 sampleData['Longitude'] = sampleData['pageId'].map(pageData.set_index('id')['Longitude'])
 
-sampleData = sampleData[['user', 'pageId','date','Latitude','Longitude']].dropna(how='any', subset=['Latitude', 'Longitude'])
-sampleDataUser = sampleData.groupby('user')
+DistWalkSamp = sampleData[['user', 'pageId','date','Latitude','Longitude']].dropna(how='any', subset=['Latitude', 'Longitude'])
 
-# To calculate the distance between each row, first find the difference between
-# the 2 coordinates and then find the distance from (0,0) to the difference
-sampleData['LatitudeCoordinateDifference'] = sampleDataUser['Latitude'].apply(lambda x: x.diff())
-sampleData['LongitudeCoordinateDifference'] = sampleDataUser['Longitude'].apply(lambda x: x.diff())
+DistWalk = DistWalkSamp
 
-sampleData['ApproxDistance'] = sampleData.apply(lambda x: sh.haversine(0,0,x.LatitudeCoordinateDifference,x.LongitudeCoordinateDifference), axis=1)
+DistWalk['LatitudeCoordinateDifference'] = DistWalkSamp.groupby('user')['Latitude'].apply(lambda x: x.shift(-1))
+DistWalk['LongitudeCoordinateDifference'] = DistWalkSamp.groupby('user')['Longitude'].apply(lambda x: x.shift(-1))
+
+# To calculate the distance between each row, I saved the current location and the one
+# that follows location
+
+DistWalk['ApproxDistance'] = DistWalk.apply(lambda x: sh.haversine(x.Latitude,x.Longitude,x.LatitudeCoordinateDifference,x.LongitudeCoordinateDifference), axis =1)
 
 # I now have the approximate distance between pages. This isn't the most
 # accurate method available, but I can work on optimising it later
-sampleData = sampleData.dropna(subset=['ApproxDistance'])
-print(ctin.organiseDescribe(sampleData['ApproxDistance'].describe()))
-#%%
+DistWalk = DistWalk.dropna(subset=['ApproxDistance'])
 
+distance = DistWalk.groupby('user')['ApproxDistance'].sum().reset_index().sort_values('user')
+
+DetectDeepReads['ApproxDistanceTravelled'] = DetectDeepReads['user'].map(distance.set_index('user')['ApproxDistance'])
+DetectDeepReads = DetectDeepReads.dropna(subset=['ApproxDistanceTravelled'])
+
+
+
+print(ctin.organiseDescribe(DistWalk['ApproxDistance'].describe()))
+
+#%%
+#If natsort can't be found, paste this into the console and run it: !pip install natsort
+import natsort
 # This cell is for Deeper Exit Point Analysis
 
 # This is set up so that I can clearly see the coordinates and what each page is.
-DPRexitPoints = DPRexitPoints.sort_values(by=['pageId'])
+DPRexitPoints = exitPoints.sort_values(by=['pageId'])
 DPRexitPoints['Latitude'] = DPRexitPoints['pageId'].map(pageData.set_index('id')['Latitude'])
 DPRexitPoints['Longitude'] = DPRexitPoints['pageId'].map(pageData.set_index('id')['Longitude'])
 # I added the page names so that I can easily tell where in the story it
 # is placed
-DPRexitPoints['Page Name'] = DPRexitPoints['pageId'].map(pageData.set_index('id')['name'])
+DPRexitPoints['PageName'] = DPRexitPoints['pageId'].map(pageData.set_index('id')['name'])
 
 
-
+DPRexitPoints = DPRexitPoints.iloc[natsort.index_humansorted(DPRexitPoints.PageName)]
+DPRexitPoints = DPRexitPoints[['PageName', 'NumExitedHere']]
+DPRexitPoints.to_csv('Deeper Exit Point Analysis.csv')
 
