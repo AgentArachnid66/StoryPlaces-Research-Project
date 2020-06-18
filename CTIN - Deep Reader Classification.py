@@ -97,13 +97,19 @@ DetectDeepReads = DetectDeepReads.dropna(subset=['TotalActiveTime'])
 # I made a new dictionary that will hold the different classes of reader
 # I did this to make it easily expandable and to make it easy to change the class
 # types
-classes = [[
-    "Checker",
-    "Intense Reader"    
-    ],[
-       "Speed Read"
-       "Avid Reader"
-       ]]
+classes = [
+    [# z = 0
+     ["Checker"        ,"Intense Reader" ], 
+     ["Speed Reader"   ,"Avid Reader" ]],
+    # z =1 
+    [["Active Checker" , "Active Intense Reader"],
+     ["Active Speed"   , "Active Avid"]]
+           ]
+
+
+    
+    
+    
 
 
 # These are filters to make the function's job a lot easier. They store 
@@ -115,27 +121,26 @@ DetectDeepReads['TotTimeActFilter'] = pd.to_timedelta(DetectDeepReads['TotalActi
 
 # The function works by taking in 2 columns and generating a key
 # to access the dictionary above. It's pure if statements, but is easy to read
-def get_class(NumPageFilter, TotActTimeFilter):
-    key = ""
+def get_class(NumPageFilter, TotActTimeFilter, DistTravelledFilter=False):
     if(NumPageFilter):
-        key += "1 "
+        key1 = 1
     else:
-        key += "0 "
+        key1 = 0
     if(TotActTimeFilter):
-        key += "1 "
+        key2 = 1
     else:
-        key += "0 "
+        key2 = 0
+    key3 = 0
+    if(DistTravelledFilter):
+        key3 = 1
+    else:
+        key3 = 0
+    
 
-    key = get_key(key)
     
-    return classes[key]
+    return classes[key3][key1][key2]
     
-def get_key(value):
-    key = value.split()
-    for character in key:
-        character = int(character)
-        
-    return key
+
 
 DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.NumPageFilter, x.TotTimeActFilter), axis = 1)
 
@@ -178,9 +183,14 @@ distance = DistWalk.groupby('user')['ApproxDistance'].sum().reset_index().sort_v
 DetectDeepReads['ApproxDistanceTravelled'] = DetectDeepReads['user'].map(distance.set_index('user')['ApproxDistance'])
 DetectDeepReads = DetectDeepReads.dropna(subset=['ApproxDistanceTravelled'])
 
+DetectDeepReads['DistTravelledFilter'] = DetectDeepReads['ApproxDistanceTravelled'] > distance['ApproxDistance'].mean()
+
+DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.NumPageFilter, x.TotTimeActFilter, x.DistTravelledFilter), axis = 1)
 
 
 print(ctin.organiseDescribe(DistWalk['ApproxDistance'].describe()))
+print(ctin.organiseDescribe(distance['ApproxDistance'].describe()))
+
 
 #%%
 #If natsort can't be found, paste this into the console and run it: !pip install natsort
