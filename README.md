@@ -7,3 +7,5 @@ The CTIN Research script performs the exploratory data analysis and saves the re
 The CTIN Research Deep Reader Classification performs the more advanced data analysis. It's a separate script so that it's not reliant on the other script to run before I can get results, thus saves performance and time. Since I have stored the resultant data frames in the Datasets folder, I can access the exploratory data analysis results in a single line. It classifies the readers based on a number of parameters, such as number of pages read and total time reading. These 2 variables are the driving force behind the classifier.
 
 The Shelleys Heart script retrieves necessary information and formats it to be used in deeper reader classification such as the locations of each page. It's also where the Haversine function is, which finds the distance between 2 locations using latitude and longitude 
+
+The Choice Analysis script tries to find patterns in the choices that people make with Shelley's Heart. 
