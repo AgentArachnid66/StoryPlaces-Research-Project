@@ -8,4 +8,4 @@ The CTIN Research Deep Reader Classification performs the more advanced data ana
 
 The Shelleys Heart script retrieves necessary information and formats it to be used in deeper reader classification such as the locations of each page. It's also where the Haversine function is, which finds the distance between 2 locations using latitude and longitude 
 
-The Choice Analysis script tries to find patterns in the choices that people make with Shelley's Heart. 
+The Choice Analysis script tries to find patterns in the choices that people make with Shelley's Heart. It holds a dictionary that links each node to each connected node.
