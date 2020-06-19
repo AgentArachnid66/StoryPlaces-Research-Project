@@ -98,13 +98,13 @@ DetectDeepReads = DetectDeepReads.dropna(subset=['TotalActiveTime'])
 # To add in a new classification, add a new dimension. To add a column, 
 # add a new array to the required dimension. 
 classes = [[
-     ["Checker"                 ,"Intense Reader" ], 
-     ["Light Reader"            , "Slow Reader"],
-     ["Speed Reader"            ,"Avid Reader" ],
-     ["Multi Story Speed Reader", "Dedicated Reader"]],
-    [["Active Checker"          , "Active Intense Reader"],
-     ["Active Light Reader"     , "Active Slow Reader"],
-     ["Active Speed"            , "Active Avid"],
+     ["Checker"                        ,"Intense Reader" ], 
+     ["Light Reader"                   , "Slow Reader"],
+     ["Speed Reader"                   ,"Avid Reader" ],
+     ["Multi Story Speed Reader"       , "Dedicated Reader"]],
+    [["Active Checker"                 , "Active Intense Reader"],
+     ["Active Light Reader"            , "Active Slow Reader"],
+     ["Active Speed"                   , "Active Avid"],
      ["Active Multi Story Speed Reader", "Active Dedicated Reader"]]
            ]
 

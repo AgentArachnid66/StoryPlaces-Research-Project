@@ -1,18 +1,102 @@
 # -*- coding: utf-8 -*-
-
-import CTINDeepReaderClassification as ctin
+import pandas as pd
+from CTINDeepReaderClassification import pageData
 
 #%%
 
-# To analyse branches and choices, I first must have a way to process them.
-#
-# The first way that comes to mind is a matrix that holds each page and their 
-# connections, but this would result in a lot of wasted space and memory.
-# The alternative is an adjanceny list, which is what I'll use and store
-# the distance between nodes using a dictionary format for each page
+def initial_graph():
+    # Doesn't include Thank You Page or Exit Story
+    # This dictinary holds of the page index in page data as a key and the 
+    # connected node's index as a value. This should allow for relatively
+    # easy traversion through the graphically representation of 
+    # Shelley's Heart
+    return { 
+        
+        0: [55, 35, 19, 1],
+        
+        # Byron Branch
+        1: [2, 0],
+        2: [3, 1],
+        3: [6, 2],
+        4: [],
+        5: [],
+        6: [8, 7, 3],
+        7: [9, 6],
+        8: [9, 6],
+        9: [10, 8, 7],
+        10: [12, 11, 9],
+        11: [13, 10],
+        12: [13, 10],
+        13: [14, 12, 11],
+        14: [16, 15, 13],
+        15: [17, 14],
+        16: [18, 14],
+        17: [15],
+        18: [16],
+        
+        # Percy Branch
+        
+        19: [21, 20, 0],
+        20: [23, 22, 19],
+        21: [23, 22, 19],
+        22: [24, 21, 20],
+        23: [24, 21, 20],
+        24: [25, 23, 22],
+        25: [26, 24],
+        26: [29, 28, 25],
+        27: [],
+        28: [30, 26],
+        29: [30, 26],
+        30: [31, 29, 28],
+        31: [33, 32, 30],
+        32: [34, 31],
+        33: [34, 31],
+        34: [33, 32],
+        
+        # Mary Branch
+        
+        35: [36, 0],
+        36: [39, 38, 35],
+        37: [],
+        38: [40, 36],
+        39: [40, 36],
+        40: [41, 39, 38],
+        41: [43, 42, 40],
+        42: [44, 41],
+        43: [44, 41],
+        44: [46, 45, 43, 42],
+        45: [47, 44],
+        46: [47, 44],
+        47: [48, 46, 45],
+        48: [50, 49, 47],
+        49: [51, 48],
+        50: [51, 48],
+        51: [53, 52, 50, 49],
+        52: [54, 51],
+        53: [54, 51],
+        54: [52, 53],
+        
+        # John Branch 
+        
+        55: [56, 0],
+        56: [59, 58, 57, 55],
+        57: [60, 56],
+        58: [60, 56],
+        59: [60, 56],
+        60: [61, 59, 58, 57],
+        61: [63, 60],
+        62: [],
+        63: [64, 61],
+        64: [66, 65, 63],
+        65: [67, 64],
+        66: [67, 64],
+        67: [69, 68, 66, 65],
+        68: [70, 67],
+        69: [70, 67],
+        70: [72, 71, 69, 68],
+        71: [73, 70],
+        72: [73, 70],
+        73: [72, 71]        
+        }
 
-pathList = ["893861b0-fa80-483e-ed94-e405e91ee0b6"["5a428f8b-173c-4d48-ce72-b1d137234d5d", 
-                                                   "1ed5a659-7032-41cf-03e9-82effaf98552", 
-                                                   "f17e55aa-28d2-4596-3a3b-f4160fec8c37", 
-                                                   "8bf230cc-42fa-4cd2-3eb9-d16480cd7094"], 
-            ""]
+graph = initial_graph()
