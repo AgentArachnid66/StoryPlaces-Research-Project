@@ -127,12 +127,12 @@ def get_class(NumPage, TotActTime, DistTravelled=None):
         x = 3
     elif(NumPage >= 9):
         x = 2
-    elif(NumPage>= 3):
+    elif(NumPage > 3):
         x = 1
 
     else:
         x = 0
-    if(pd.to_timedelta(TotActTime) > pd.to_timedelta(('0 days 00:27:37.970000'))):
+    if(pd.to_timedelta(TotActTime) > pd.to_timedelta(('0 days 00:30:00.000000'))):
         y = 1
     else:
         y = 0
@@ -164,45 +164,69 @@ ReaderClass.to_csv('ReaderClass.csv')
 # DistWalk is the Distance by User per Page
 # distance is the total Distance per user
 
-
+# imports relevant variables from other modules
 sampleData = ctin.validPages
 pageData = sh.pageData
 
+# Sorts the dataset by the relevant values
 sampleData = sampleData.sort_values(by=['user', 'date'])
 
+# Adds in the location information by mapping the relevant information
+# from the page data dataframe to a new column.
 sampleData['Latitude'] = sampleData['pageId'].map(pageData.set_index('id')['Latitude'])
 sampleData['Longitude'] = sampleData['pageId'].map(pageData.set_index('id')['Longitude'])
 
+# Dropping the irrelevant data
 DistWalkSamp = sampleData[['user', 'pageId','date','Latitude','Longitude']]
 
+# Saves it in another variable in case I want to do further analysis on the
+# original dataset
 DistWalk = DistWalkSamp
 
+# I saved the coordinates of the page each user read next. I did this as I 
+# couldn't figure out in the time limit how to compare separate rows at
+# once. 
 DistWalk['LatitudeCoordinateDifference'] = DistWalkSamp.groupby('user')['Latitude'].apply(lambda x: x.shift(-1))
 DistWalk['LongitudeCoordinateDifference'] = DistWalkSamp.groupby('user')['Longitude'].apply(lambda x: x.shift(-1))
 
-# To calculate the distance between each row, I saved the current location and the one
-# that follows location
-
+# To calculate the distance between each row, I saved the current location and 
+# the one that follows. I then applied the haversine function that I defined
+# in a separate module.
 DistWalk['ApproxDistance'] = DistWalk.apply(lambda x: sh.haversine(x.Latitude,x.Longitude,x.LatitudeCoordinateDifference,x.LongitudeCoordinateDifference), axis =1)
 
 # I now have the approximate distance between pages. This isn't the most
 # accurate method available, but I can work on optimising it later
+
+# Up until now, I have NaNs in my data so I'm just going to fill them in with
+# 0 as they are the end of a reading, therefore they haven't moved and 
+# therefore they have moved 0m.
 DistWalk = DistWalk.fillna(0)
 
+# Now I just add up each user's distance travelled, reset the index to 
+# get a dataframe and sort by the user.
 distance = DistWalk.groupby('user')['ApproxDistance'].sum().reset_index().sort_values('user')
 
+# Now I map these distances to the main deep reader dataframe for use in 
+# further classification.
 DetectDeepReads['ApproxDistanceTravelled'] = DetectDeepReads['user'].map(distance.set_index('user')['ApproxDistance'])
 
 
+# I then call the function to classify the readers using this new classification
 DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pagesRead, x.TotalActiveTime, x.ApproxDistanceTravelled), axis = 1)
+
+# Counting how many of each reader class there are
 DeeperReaderClass = DetectDeepReads.groupby('reader class').count()
 DeeperReaderClass = DeeperReaderClass['user']
 
+# Getting rid of the outliers for the describe function to properly function
 distanceOutlierFilter = (distance['ApproxDistance'] >= distance['ApproxDistance'].describe()['25%'] * (2/3)) & (distance['ApproxDistance'] <= distance['ApproxDistance'].describe()['75%'] * (1.5))
 filteredDistance = distance[distanceOutlierFilter]
+# Get the distance walked between pages
 print(ctin.organiseDescribe(DistWalk['ApproxDistance'].describe()))
+# Get the total distance per user
 print(ctin.organiseDescribe(filteredDistance['ApproxDistance'].describe()))
 
+# Saves to a csv so that I can easily display it.
 DeeperReaderClass.to_csv("DeepReaderClass.csv")
 #%%
 # This cell is to explore how many users reached the end page
@@ -223,6 +247,7 @@ DeeperReaderClass.to_csv("DeepReaderClass.csv")
 endPageFilter = DPRtimeSpentOnPage['pageId'] == "47480a57-3aee-4176-c171-7a02b2572a57"
 UserReachedEnd = DPRtimeSpentOnPage[endPageFilter]
 
+# 
 UserReachedEnd['NextEndDate']= UserReachedEnd.groupby('user')['date'].apply(lambda x: x.shift(-1))
 UserReachedEnd['TimeDifference'] = pd.to_datetime(UserReachedEnd['NextEndDate']) - pd.to_datetime(UserReachedEnd['date'])
 UserReachedEnd['TimeDifference'] = UserReachedEnd['TimeDifference'].fillna(pd.to_timedelta("0 days 00:30:04.079000"))
@@ -233,7 +258,9 @@ UserReachedEnd.to_csv('FrequencyReachedEnd.csv')
 
 #%%
 #If natsort can't be found, paste this into the console and run it: !pip install natsort
+
 import natsort
+
 # This cell is for Deeper Exit Point Analysis
 
 # This is set up so that I can clearly see the coordinates and what each page is.
@@ -244,8 +271,9 @@ DPRexitPoints['Longitude'] = DPRexitPoints['pageId'].map(pageData.set_index('id'
 # is placed
 DPRexitPoints['PageName'] = DPRexitPoints['pageId'].map(pageData.set_index('id')['name'])
 
-
+# Sorts the page names by number then letter
 DPRexitPoints = DPRexitPoints.iloc[natsort.index_humansorted(DPRexitPoints.PageName)]
+# Drops unnecessary columns
 DPRexitPoints = DPRexitPoints[['PageName', 'NumExitedHere']]
 DPRexitPoints.to_csv('Deeper Exit Point Analysis.csv')
 
@@ -255,14 +283,22 @@ DPRexitPoints.to_csv('Deeper Exit Point Analysis.csv')
 
 # List of each page and frequency of time on each page
 
+# Drops unnecessary columns then sorts them by ID
 AvTimeOnPage = DPRtimeSpentOnPage.drop(['user', 'date'], axis=1).sort_values('pageId')
 
+# Changes the dtype of the timeOnPage columns to timeDelta
 AvTimeOnPage['timeOnPage'] = AvTimeOnPage.apply(lambda x: pd.to_timedelta(x.timeOnPage), axis=1)
+# Maps the page names to the page Ids to make the column easier to read
 AvTimeOnPage['PageName'] = AvTimeOnPage['pageId'].map(pageData.set_index('id')['name'])
-
+# Groups by the page id so that I can aggragate by the right groups
 AvTimeOnPageGrp = AvTimeOnPage.groupby('pageId')
+# Finds average time spent on each page and then resets index to return a 
+# dataframe
 AvTimeOnPageGrpMean = AvTimeOnPageGrp['timeOnPage'].mean(numeric_only=False).reset_index()
+# Maps the page names back to the dataframe I just created
 AvTimeOnPageGrpMean['PageName'] = AvTimeOnPageGrpMean['pageId'].map(pageData.set_index('id')['name'])
+# Sorts the dataframe by the page name by number then letter
 AvTimeOnPageGrpMean = AvTimeOnPageGrpMean.iloc[natsort.index_humansorted(AvTimeOnPageGrpMean.PageName)].set_index('PageName')
 
+# Saves this dataframe as a csv
 AvTimeOnPageGrpMean.to_csv('AverageTimeOnPage')

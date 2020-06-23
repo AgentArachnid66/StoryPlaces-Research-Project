@@ -4,7 +4,7 @@
 # This cell imports the necessary libraries
 import pandas as pd
 import re
-
+import numpy as np
 
 #%%
 # This cell gets the dataset and loads it into a variable. Much more efficient
@@ -26,6 +26,11 @@ def organiseDescribe(value):
 #    rewriteMedian = re.sub(r'50\%', "Median", rewriteSTD)
     return rewriteSTD
 
+def removeDuplicate(current, previous):
+    if current == previous:
+        return np.nan
+    else:
+        return current
 fileData = ""
 
 #%%
@@ -36,16 +41,29 @@ userGrp = dataSet.groupby(dataSet["user"])
 fileData += "The number of users is " +str(userGrp.ngroups)
 
 #%%
-# This cell is the Exploratory Data Analysis - Pages Read Per User
+
+# This cell is for data cleanup
 
 # I made a new dataframe to save this data
 pagePerUser  = pd.DataFrame()
 
 # The first thing I did was remove any rows that don't have any page IDs,
-# Therefore they didn't read anything and shouldn't be included in the count
+# Therefore they didn't read anything and shouldn't be included in the count.
 validPages = dataSet.copy(deep=True).dropna(how='any', subset=['pageId'])
-validPages = validPages.drop_duplicates(subset = ['date', 'user'])
+validPages = validPages.drop_duplicates(subset = ['date', 'user']).drop_duplicates(subset = ['pageId', 'user', 'date'], keep = 'last')
+# I also got rid of the duplicates of pages at once. For example, if they read
+# the same page 3 times, without switching, I would get rid of the following
+# duplicates to get an accurate conclusion
+validPages = validPages.sort_values(['user', 'date'])
+validPages['NextPage'] = validPages.groupby('user')['pageId'].apply(lambda x: x.shift(-1))
+validPages['pageId'] = validPages.apply(lambda x: removeDuplicate(x.pageId, x.NextPage), axis=1 )
+validPages = validPages.dropna(subset=['pageId'])
 
+
+
+#%%
+
+# This cell is the Exploratory Data Analysis - Pages Read Per User
 
 # After that, it was a simple case of grouping them by user and count the number
 # Of occurances and store that as it's own variable
@@ -101,8 +119,7 @@ storyFreqU = validStories[["user", "storyId"]].groupby(['storyId','user'])
 
 # Checks if any rows have no date information or page Id and copies the 
 # data frame to the variable. Then drop any that duplicate dates
-validPageTimes = dataSet.copy().dropna(how='any', subset=['date', 'pageId'])
-validPageTimes = validPageTimes.drop_duplicates(subset = ['date', 'user'])
+validPageTimes = validPages.copy(deep=True)
 
 # Generates a new DataFrame for the time spent on each page based on user, 
 # date and page id. 
