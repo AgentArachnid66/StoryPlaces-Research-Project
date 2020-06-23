@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-#import pandas as pd
-#import CTINDeepReaderClassification as ctin
-#import CTINResearch as orctin
+import pandas as pd
+import CTINDeepReaderClassification as ctin
+import CTINResearch as orctin
 
-#data = orctin.validPages
+data = orctin.validPages
 
-#pageData = ctin.sh.pageData
+pageData = ctin.sh.pageData
 
 #%%
 
@@ -14,7 +14,8 @@
 import numpy as np
 from ShelleysHeart import haversine as haversine
 
-    
+# Initialses the list for use in the recursive function
+Nodes = []
 
 
 # This function initialises the graphical representation of Shelley's Heart
@@ -129,16 +130,22 @@ def initial_graph():
 
 # This function converts the page Id to the index of the page ID on the 
 # PageData dataframe. This makes it easier to read and allows me to use it as 
-# a key to access the dictionary
-def getIndex(value):
+# a key to access the dictionary. It also retrieves the index of a list to
+# get the index of a particular branch in the story for use in another function
+def getIndex(value, useBranch = False):
+    # As I am essentially overloading the function, I need a boolean to tell
+    # Python that I want this function to do 2 separate things    
+    if(useBranch):
+        return connections.index(value)
+    else:
     # As I'm unsure as to how many times I'll have to run this, I'm
     # implementing a security measure that maintains the index if it's inputted
     # into the function multiple times
-    try:
-        index = pd.Index(pageData['id']).get_loc(value)
-    except:
-        index = value
-    return index
+        try:
+            index = pd.Index(pageData['id']).get_loc(value)
+        except:
+            index = value
+        return index
 
 # This function just compares 2 objects/values and returns NaN if they're the 
 # same. This allows me to drop the NaNs after calling it.
@@ -153,6 +160,7 @@ def removeDuplicate(current, previous):
 def checkBranch(branch):
     # First thing I'll do is get the connected nodes using the dictionary
     branches = graph[branch]
+    Nodes.clear
     # Get rid of the last two items as they are the exitStory Node and the
     # previously connected node. 
     branches = branches[:-2]
@@ -195,25 +203,50 @@ def backTracking(Node):
     # dictionary becomes useful. Instead of searching the entire tree for one 
     # path, I can just track the tree back until I reach 0.
     
-    # This would be best designed to be recursive
-    print(Node)
+    # Store the node to a global variable
     Nodes.append(Node)
     if(Node == 0):
-
         return Node
     else:
         backTracking(graph[Node][-1])
 
-# As this is used in a recursive function, I need it to hold them globally
-# as they would have been constantly rewritten everytime it would be called
-Nodes = []
+
+
 # Initialises the graph
 graph = initial_graph()
-# Test for the major function 
-print(checkBranch(14))
 
 #%%
-#
+
+# This cell is for choice analysis. That means I'll make an array that holds
+# every branch and then go through every user's choices and get some kind 
+# of conclusion from this.
+
+connections = []
+for i in range(len(graph)):
+    nodeConnect = []
+    for j in graph[i]:
+        if(j > i):
+            nodeConnect.append(j)
+    connections.append(nodeConnect)
+
+print("All connections: ")
+print(connections)
+# As every node is connected to the exit story node, every node that has 
+# at least 2 connections, excluding 78, is a branch. So all I need to do
+# is iterate through this new nested list and find the ones with at least 3
+# connections.
+validBranches = [x for x in connections if len(x)>=3]
+# Now that I have a variable holding the branches in the story and a variable
+# to compare them to, in order to find the index, I can now start working
+# on gaining some data contributed to each branch and see what sort of 
+# patterns emerge from the users.
+
+print("\n All Branches: ")
+
+
+print(validBranches)
+
+#%%
 
 # This  returns the user's page's visited as a list attached to each user
 
