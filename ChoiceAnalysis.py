@@ -17,6 +17,8 @@ from ShelleysHeart import haversine as haversine
 # Initialses the list for use in the recursive function
 Nodes = []
 
+pageData['Frequency'] = pageData['id'].map(orctin.pageFreq.set_index('pageId')['pageFreq'])
+
 
 # This function initialises the graphical representation of Shelley's Heart
 def initial_graph():
@@ -136,7 +138,10 @@ def getIndex(value, useBranch = False):
     # As I am essentially overloading the function, I need a boolean to tell
     # Python that I want this function to do 2 separate things    
     if(useBranch):
-        return connections.index(value)
+        try:
+            index = connections.index(value)
+        except:
+            index = np.nan
     else:
     # As I'm unsure as to how many times I'll have to run this, I'm
     # implementing a security measure that maintains the index if it's inputted
@@ -145,7 +150,9 @@ def getIndex(value, useBranch = False):
             index = pd.Index(pageData['id']).get_loc(value)
         except:
             index = value
-        return index
+            print('nope')
+    
+    return index
 
 # This function just compares 2 objects/values and returns NaN if they're the 
 # same. This allows me to drop the NaNs after calling it.
@@ -160,10 +167,11 @@ def removeDuplicate(current, previous):
 def checkBranch(branch):
     # First thing I'll do is get the connected nodes using the dictionary
     branches = graph[branch]
-    Nodes.clear
-    # Get rid of the last two items as they are the exitStory Node and the
+    Nodes.clear()
+    # Get rid of the last 2 items as they are the exitStory and the
     # previously connected node. 
-    branches = branches[:-2]
+    if(branch != 0):
+        branches = branches[:-2]
     
     # Gets the current node's location
     locations = [(pageData['Latitude'].iloc[branch],pageData['Longitude'].iloc[branch])]
@@ -194,7 +202,7 @@ def checkBranch(branch):
     # returns a tuple that holds the distances between the current node
     # and the consequent nodes, the nodes that have come before this one and
     # the number of nodes that have come before this. 
-    return distance, Nodes, len(Nodes)
+    return distance, branches, Nodes, len(Nodes)
 
 # This function returns the nodes in between the root node and the
 # node specified.     
@@ -205,6 +213,7 @@ def backTracking(Node):
     
     # Store the node to a global variable
     Nodes.append(Node)
+    # Escape Clause, which is important for a recursive function
     if(Node == 0):
         return Node
     else:
@@ -217,15 +226,15 @@ graph = initial_graph()
 
 #%%
 
-# This cell is for choice analysis. That means I'll make an array that holds
-# every branch and then go through every user's choices and get some kind 
-# of conclusion from this.
+# This cell is for setting up the choice analysis, by saving relevant branch
+# information as an array 
+
 
 connections = []
 for i in range(len(graph)):
     nodeConnect = []
     for j in graph[i]:
-        if(j > i):
+        if(j > i) and (j != 78):
             nodeConnect.append(j)
     connections.append(nodeConnect)
 
@@ -235,23 +244,114 @@ print(connections)
 # at least 2 connections, excluding 78, is a branch. So all I need to do
 # is iterate through this new nested list and find the ones with at least 3
 # connections.
-validBranches = [x for x in connections if len(x)>=3]
-# Now that I have a variable holding the branches in the story and a variable
-# to compare them to, in order to find the index, I can now start working
-# on gaining some data contributed to each branch and see what sort of 
-# patterns emerge from the users.
+validBranches = [x for x in connections if len(x)>=2]
 
 print("\n All Branches: ")
-
-
 print(validBranches)
+
+validBranchesIndex = []
+for i in validBranches:
+    index = (getIndex(i, useBranch=True))
+    if index in validBranchesIndex:
+        index += 1
+    validBranchesIndex.append(index)
+
+# Now that I have a variable holding the branches in the story and a variable
+# to compare them to, in order to find the index, as well as a variable to
+# hold those indices, I can now start working on gaining some data contributed 
+# to each branch and see what sort of patterns emerge from the users.
 
 #%%
 
-# This  returns the user's page's visited as a list attached to each user
+# This returns the user's page's visited as a list attached to each user
 
 # It converts the pageId to the format required to traverse the graph
 data['newPageId'] = data['pageId'].apply(lambda x: getIndex(x))
 # It then saves these pages in a list for each user. This allows me to see
 # the choices people made really easily.
 dataList = data.groupby('user')['newPageId'].apply(list)
+print(checkBranch(validBranchesIndex[0]))
+# Structure that holds the index and the number of people that went to certain
+# choices and the distance to those choices and hold a list of this structure
+# so that I can analyse them. 
+
+class indexChoice():
+    
+    def __init__(self, index):
+        self.index = index
+    
+    def findChoices(self):
+        return checkBranch(self.index)[1]
+        
+    def setIndex(self, newIndex):
+        self.index = newIndex
+    
+    def getIndex(self):
+        return self.index
+    
+    def findNumberUsersHere(self, searchList=dataList, nested=True):
+        numUsers = 0
+        for i in searchList:
+            if(nested):
+                for j in i:
+                    if j == self.index:
+                        numUsers += 1
+            else:
+                if self.index in i:
+                    numUsers += 1
+        return numUsers
+        
+    # As an alternative option to the function above, this one 
+    # has a linear Big (O) computation complexity, compared to the previous'
+    # potential quadratic, and is thus quicker and less intensive in processing
+    # power. However it is highly speciliased and cannot be reused for 
+    # another list.
+    def getNumUsers(self):
+        page = pageData['Frequency'].iloc[self.index]
+        return page
+        
+    def getBranches(self, distance=False):
+        if distance:
+            return checkBranch(self.index)[:2]
+        else:
+            return checkBranch(self.index)[1]
+    
+    # This function takes in the branch index and returns the number of people
+    # who chose that route
+    def getBranchResult(self):
+        frequency = []
+        if(self.index != 0):
+            print('isnt 0')
+            for i in self.getBranches(self.index)[1]:
+                frequency.append(indices[i].getNumUsers())
+        
+        else:
+            for i in self.getBranches(self.index):
+                frequency.append(indices[i].getNumUsers())
+
+        
+        return frequency
+    
+        #for i in indices[self.getBranches(self.index)[1]]:
+
+            
+            
+# Holds the indices for the branches class in a list for
+branchIndices = []
+# Holds the indices for the entire graph
+indices = []
+# Iterates through all of the branches indices
+for i in validBranchesIndex:
+    branchIndices.append(indexChoice(i))
+    
+for i in connections:
+    indices.append(indexChoice(getIndex(i, useBranch=True)))
+
+test = 0
+test2 = 55
+print("\n")
+print(branchIndices[test].getBranches(distance=True))
+print(branchIndices[test].getBranchResult())
+
+print(indices[test2].getNumUsers())
+

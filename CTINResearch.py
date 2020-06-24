@@ -93,6 +93,8 @@ pageFreq = validPages.groupby('pageId', as_index=False).size().reset_index()
 # other parts of the script
 pageFreq.columns = ['pageId', 'pageFreq']
 
+
+
 pageFreq.to_csv("PageReadingFrequency.csv")
 
 print("Page: " +pageFreq['pageId'].astype(str) +"  Read Frequency: " +pageFreq['pageFreq'].astype(str))

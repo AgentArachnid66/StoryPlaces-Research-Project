@@ -5,6 +5,7 @@ from pandas.io.json import json_normalize
 import json
 import re
 import numpy as np
+import CTINResearch as ctin
 
 with open("Dataset/sh(1).json") as json_data:
     data = json.load(json_data)
@@ -195,18 +196,12 @@ missingJSON = \
     
 # Normalizes the main data set
 pageData = json_normalize(pageData)
-"""
-# appends the missing JSON entries to the main data set and drops any duplicates
-# that may have occured
-appended = pageData.append(json_normalize(missingJSON))
-appended = appended.drop_duplicates(subset = ['id'])
-# Sets the main data set to the new appended data set
-pageData = appended
-"""
+
 pageData['hint.locations'] = pageData['hint.locations'].apply(lambda x:remove_brackets(x))
 
 pageData['Latitude'] = pageData['hint.locations'].map(locationData.set_index('id')['lat'])
 pageData['Longitude'] = pageData['hint.locations'].map(locationData.set_index('id')['lon'])
+
 
 def haversine(lat1, lon1, lat2, lon2):
     if(lat1, lon1, lat2, lon2) == np.nan:

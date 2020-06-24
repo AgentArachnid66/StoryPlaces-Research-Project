@@ -110,12 +110,6 @@ classes = [[
 
 classDf = pd.DataFrame(classes[0]).append(pd.DataFrame(classes[1]))
 classDf.to_csv("class.csv")
-# These are filters to make the function's job a lot easier. They store 
-# a boolean on the dataframe so that all the function needs to do is assign
-# classes based on these values. It also helps to make it expandable as I just
-# need to make a new filter and conditions on the function.
-DetectDeepReads['NumPageFilter'] = DetectDeepReads['pagesRead'] >= 9
-DetectDeepReads['TotTimeActFilter'] = pd.to_timedelta(DetectDeepReads['TotalActiveTime']) > pd.to_timedelta('0 days 00:27:37.970000')
 
 # The function works by taking in n columns and generating a key
 # to access the n-dimensional array above. 
@@ -302,3 +296,21 @@ AvTimeOnPageGrpMean = AvTimeOnPageGrpMean.iloc[natsort.index_humansorted(AvTimeO
 
 # Saves this dataframe as a csv
 AvTimeOnPageGrpMean.to_csv('AverageTimeOnPage')
+
+
+#%%
+
+# This cell is for average time spent per page for each user
+DetectDeepReads['AverageTimePerPage'] = DetectDeepReads['TotalActiveTime'] / DetectDeepReads['pagesRead']
+
+#%%
+
+# This cell is to add in the exit page for each user.
+
+userExit = ctin.exitPoints
+
+DetectDeepReads['ExitPoints'] = DetectDeepReads['user'].map(userExit.set_index('user')['pageId'])
+
+DetectDeepReads['ExitPointsName'] = DetectDeepReads['ExitPoints'].map(pageData.set_index('id')['name'])
+
+DetectDeepReads.to_csv('DeepReaderClassificationTable.csv')
