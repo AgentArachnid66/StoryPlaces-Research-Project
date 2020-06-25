@@ -5,6 +5,7 @@
 import pandas as pd
 import re
 import numpy as np
+import ShelleysHeart as sh
 
 #%%
 # This cell gets the dataset and loads it into a variable. Much more efficient
@@ -58,8 +59,6 @@ validPages = validPages.sort_values(['user', 'date'])
 validPages['NextPage'] = validPages.groupby('user')['pageId'].apply(lambda x: x.shift(-1))
 validPages['pageId'] = validPages.apply(lambda x: removeDuplicate(x.pageId, x.NextPage), axis=1 )
 validPages = validPages.dropna(subset=['pageId'])
-
-
 
 #%%
 

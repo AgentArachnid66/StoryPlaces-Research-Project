@@ -116,8 +116,8 @@ classDf.to_csv("class.csv")
 # It's pure if statements, but is easy to read. To access a newly added 
 # classification, add in the variable to the parameters and set up the 
 # if statement to check if it's None and if it has a value do the classification
-def get_class(NumPage, TotActTime, DistTravelled=None):
-    if(NumPage >= 14):
+def get_class(NumPage, TotActTime, DistTravelled=None, reachedEndPage=False):
+    if(reachedEndPage):
         x = 3
     elif(NumPage >= 9):
         x = 2
@@ -211,6 +211,9 @@ DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pa
 # Counting how many of each reader class there are
 DeeperReaderClass = DetectDeepReads.groupby('reader class').count()
 DeeperReaderClass = DeeperReaderClass['user']
+    
+    
+
 
 # Getting rid of the outliers for the describe function to properly function
 distanceOutlierFilter = (distance['ApproxDistance'] >= distance['ApproxDistance'].describe()['25%'] * (2/3)) & (distance['ApproxDistance'] <= distance['ApproxDistance'].describe()['75%'] * (1.5))
@@ -238,17 +241,48 @@ DeeperReaderClass.to_csv("DeepReaderClass.csv")
 
 # To change page to analyse, change page ID here. Can be accessed from pageData
 # variable for reference
-endPageFilter = DPRtimeSpentOnPage['pageId'] == "47480a57-3aee-4176-c171-7a02b2572a57"
-UserReachedEnd = DPRtimeSpentOnPage[endPageFilter]
+endPages = ["47480a57-3aee-4176-c171-7a02b2572a57",
+            "16b83f63-1263-4069-643a-01f7029b1f49",
+            "c05eacac-cf06-4eb2-dd60-323e08aaf064",
+            "5eb7c764-0aa4-4984-2b27-2515b92cb252",
+            "c56a29d1-0564-403b-8a82-0697a3d40080",
+            "1e4f4680-20d8-4df4-1828-00550dec362e",
+            "bbc0da17-194b-473a-b865-c9efb8ae94f6",
+            "981468a4-d38f-4fd3-4b4c-dbb03637ef32",
+            "3bfc772a-2257-4244-3e75-51c181bee1a9",
+            "dafd6c3f-9bed-4879-d90b-20001528504b"
+            ]
 
-# 
+test = ctin.validPages
+
+endPageFilter = ctin.validPages.pageId.isin(endPages)
+UserReachedEnd = ctin.validPages[endPageFilter]
+
+
+# Tests to see if the user reached the end page in a realistic time frame
+timeFrame = "0 days 00:20:04.079000"
+#UserReachedEnd = UserReachedEnd[['user', 'pageId', 'pageName']]
 UserReachedEnd['NextEndDate']= UserReachedEnd.groupby('user')['date'].apply(lambda x: x.shift(-1))
 UserReachedEnd['TimeDifference'] = pd.to_datetime(UserReachedEnd['NextEndDate']) - pd.to_datetime(UserReachedEnd['date'])
 UserReachedEnd['TimeDifference'] = UserReachedEnd['TimeDifference'].fillna(pd.to_timedelta("0 days 00:30:04.079000"))
-endPageDupFilter = UserReachedEnd['TimeDifference'] > pd.to_timedelta("0 days 00:20:04.079000")
+endPageDupFilter = UserReachedEnd['TimeDifference'] > pd.to_timedelta(timeFrame)
 
-UserReachedEnd = UserReachedEnd[endPageDupFilter].groupby('user').count().drop(['pageId', 'timeOnPage', 'NextEndDate', "TimeDifference"],axis=1).rename(columns={'date' : "Frequency"})
-UserReachedEnd.to_csv('FrequencyReachedEnd.csv')
+UserReachedEnd = UserReachedEnd[endPageDupFilter]
+
+DetectDeepReads['reachedEndPage'] = DetectDeepReads.user.isin(UserReachedEnd['user'])
+
+print(UserReachedEnd.groupby('user').ngroups)
+
+# I then call the function to classify the readers using this new classification
+DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pagesRead, x.TotalActiveTime, x.ApproxDistanceTravelled ,x.reachedEndPage), axis = 1)
+
+# Counting how many of each reader class there are
+DeeperReaderClass = DetectDeepReads.groupby('reader class').count()
+DeeperReaderClass = DeeperReaderClass['user']
+
+DeeperReaderClass.to_csv("DeepReaderClass.csv")
+
+# Clean up to do - Get correct page name's attached to the correct page ID
 
 #%%
 #If natsort can't be found, paste this into the console and run it: !pip install natsort

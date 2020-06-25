@@ -5,7 +5,6 @@ from pandas.io.json import json_normalize
 import json
 import re
 import numpy as np
-import CTINResearch as ctin
 
 with open("Dataset/sh(1).json") as json_data:
     data = json.load(json_data)
