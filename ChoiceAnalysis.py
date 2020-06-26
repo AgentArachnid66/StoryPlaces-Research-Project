@@ -51,6 +51,7 @@ class indexChoice():
         # This is the last net to catch nodes that are the node that lead 
         # to this node. 
         for i in range(len(branches[1])):
+            print(branches)
             if branches[1][i] <= self.index:
                 del branches[1][i]
                 del branches[0][i]
@@ -220,7 +221,7 @@ def checkBranch(branch):
     # Get rid of the last 2 items as they are the exitStory and the
     # previously connected node. 
     if(branch != 0):
-        branches = branches[:-2]
+        branches = branches[:-1]
     
     # Gets the current node's location
     locations = [(pageData['Latitude'].iloc[branch],pageData['Longitude'].iloc[branch])]
@@ -264,10 +265,8 @@ def backTracking(Node, end=0):
     Nodes.append(Node)
     # Escape Clause, which is important for a recursive function
     if(Node == end):
-        print('end reached')
         return Node
     else:
-        print('recursing')
         backTracking(graph[Node][-1])
 
 def toStringAnalysis(value):
@@ -359,18 +358,49 @@ def lookForPattern(pattern):
     
 matches = (lookForPattern([0, 1]))
 print(matches)
+
+def shortestDistance(start, end):
+    shortestNodes.append(start)
+    print(start)
+
+    if start == end:
+        return
     
-# If I want to find the shortest path from node 0 to node 78, then I'll use
-# Djikstra's Algorithm.
+    branches = checkBranch(start)
+    
+    lowest= branches[0][0]
+    
+    print(branches[2][0])
+    for i in branches[0]:
+       if i <= lowest and branches[1][branches[0].index(i)] > start:
+            lowest = i
+        
+    print(branches)
+    shortestDistance(branches[1][branches[0].index(lowest)], end)
+        
+
+    
+shortestNodes = []
+
+shortestDistance(1, 18)
+byronPath = shortestNodes
+shortestNodes = []
 
 
+shortestDistance(19, 34)
+percyPath = shortestNodes
+shortestNodes = []
 
 
+shortestDistance(35, 54)
+maryPath = shortestNodes
+shortestNodes = []
 
 
+shortestDistance(55, 73)
+johnPath = shortestNodes
+shortestNodes = []
 
 
-
-
-
-
+    
+    
