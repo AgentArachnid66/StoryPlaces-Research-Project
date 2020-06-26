@@ -47,11 +47,11 @@ class indexChoice():
             branches = checkBranch(self.index)[:2]
         else:
             branches = checkBranch(self.index)[1]
-            
-        # This is the last net to catch nodes that are the node that lead 
+        print(branches)
+
+        # This is the last net to catch nodes that lead 
         # to this node. 
         for i in range(len(branches[1])):
-            print(branches)
             if branches[1][i] <= self.index:
                 del branches[1][i]
                 del branches[0][i]
@@ -269,12 +269,86 @@ def backTracking(Node, end=0):
     else:
         backTracking(graph[Node][-1])
 
+
 def toStringAnalysis(value):
     listToStr = ' '.join(map(str, value))
     listToStr = re.sub(r'\ ', r'-', listToStr)
     return(listToStr)
 
+# Recursive function to find path
+def shortestDistance(start, end, path=None):
+    # This function is a poor man's version of Djikstra's algorithm. 
+    # It doesn't find the shortest distance overall, but instead the shortest
+    # distance from node to node.     
+    
+    # Checks if the path is null
+    if path != None:
+        path.append(start)
+    
+  
+    # Escape Clause
+    if start == end:
+        return
+    
+    # Gets the branch information and sets the value to beat to the first
+    # index
+    branches = checkBranch(start)
+    lowest= branches[0][0]
+    
+    # Iterates through the branch information
+    for i in branches[0]:
+    # If the current item is less than the current lowest value, and the index
+    # is lower than the current branch, it then becomes the new lowest value
+       if i <= lowest and branches[1][branches[0].index(i)] > start:
+            lowest = i
         
+    # It then calls itself with the start being the node closest to the 
+    # current node and the end and path variables being maintained
+    shortestDistance(branches[1][branches[0].index(lowest)], end, path)
+        
+# Uses the shortestDistance function to return a list of nodes
+def findShortDist(start, end):
+    path = []
+    shortestDistance(start, end, path)
+    return path
+        
+
+def splitUpPath(path, segmentSize, reverse= False, withOffset = False, offset = 0):
+    segments = []
+    numSeg = 0
+    reversedPath = path[::-1]
+    for i in range(len(path)):
+        if (i % segmentSize == 0):
+            segments.append(path[numSeg * segmentSize : numSeg * segmentSize + segmentSize ])
+            numSeg += 1
+            
+    if(offset):
+        numSeg = 0
+        for i in range(len(path)):
+            if i % segmentSize == 0:
+                segments.append(path[(numSeg * segmentSize + offset) : (numSeg * segmentSize + segmentSize +offset)])
+                numSeg += 1
+
+    if(reverse):
+        numSeg = 0
+        for i in range(len(reversedPath)):
+            if i % segmentSize == 0:
+                segments.append(reversedPath[numSeg * segmentSize : numSeg * segmentSize + segmentSize ])
+                numSeg += 1
+
+    sortedSegments = [x for x in segments if len(x)>1]
+    return sortedSegments
+
+
+def lookForPattern(pattern, inputString):
+    # Copy the code that converts the users pages to the same format
+    formatPattern = ' '.join(map(str, pattern))
+    formatPattern = re.sub(r'\ ', r'\-', formatPattern)
+    matches = re.findall(formatPattern, str(inputString))
+    return matches
+    
+
+
 #%%
 # Initialises the graph
 graph = initial_graph()
@@ -319,6 +393,7 @@ data['newPageId'] = data['pageId'].apply(lambda x: getIndex(x))
 # It then saves these pages in a list for each user. This allows me to see
 # the choices people made really easily.
 dataList = data.groupby('user')['newPageId'].apply(list)
+
 patterns = dataList.apply(lambda x: toStringAnalysis(x))
 #Holds the indices for the branches class in a list
 branchIndices = []
@@ -338,6 +413,7 @@ for i in connections:
 branchDF = pd.DataFrame(validBranchesIndex)
 branchDF.columns = ['branchIndex']
 # Adds the relevant columns to 
+
 branchDF['Branches'] = branchDF['branchIndex'].apply(lambda x: indices[x].getBranchResult()[0])
 branchDF['Distances'] = branchDF['branchIndex'].apply(lambda x: indices[x].getBranchResult()[1])
 branchDF['Frequency'] = branchDF['branchIndex'].apply(lambda x: indices[x].getBranchResult()[2])
@@ -349,58 +425,52 @@ branchDF.to_csv('BranchAnalysis.csv')
 # This cell looks for specific patterns in the patterns variable
 
 
-def lookForPattern(pattern):
-    # Copy the code that converts the users pages to the same format
-    formatPattern = ' '.join(map(str, pattern))
-    formatPattern = re.sub(r'\ ', r'\-', formatPattern)
-    matches = re.findall(formatPattern, str(patterns[0]))
-    return matches
-    
-matches = (lookForPattern([0, 1]))
-print(matches)
+# Finds the shortest journey from one node to the next. In this case, from
+# one major branch to the end of the story
+byronPath = findShortDist(1, 18)
+percyPath= findShortDist(19, 34)
+maryPath = findShortDist(35, 54)
+johnPath = findShortDist(55, 73)
 
-def shortestDistance(start, end):
-    shortestNodes.append(start)
-    print(start)
+pathsToCheck = [byronPath, percyPath, maryPath, johnPath]
 
-    if start == end:
-        return
-    
-    branches = checkBranch(start)
-    
-    lowest= branches[0][0]
-    
-    print(branches[2][0])
-    for i in branches[0]:
-       if i <= lowest and branches[1][branches[0].index(i)] > start:
-            lowest = i
+newPaths = []
+for k in range(17):
+    for i in pathsToCheck:
+        newPaths += splitUpPath(i, (k+1), reverse=True, withOffset = True, offset = 1)
+
+newPaths += pathsToCheck
+
+toLook = []
+
+for i in newPaths:
+    if i in toLook:
+        continue
+    else:
+        toLook.append(i)
         
-    print(branches)
-    shortestDistance(branches[1][branches[0].index(lowest)], end)
-        
+match = []
+
+for i in patterns:
+    for j in toLook:
+        result = lookForPattern(j, i)
+        if result != None:
+            match += result
+            
+match.sort()
+       
+def countChoices(listToCount):
+    df = pd.DataFrame(listToCount)
+    df.columns = ['pattern']
+    df['NumPages'] = df['pattern'].apply(lambda x: stringToList(x))
+    return df
+
+def stringToList(value):
+    toint = re.sub(r'-', r'\'\'\"\'', value)
+    
+    numericList = [toint]
+    
+    return numericList
 
     
-shortestNodes = []
-
-shortestDistance(1, 18)
-byronPath = shortestNodes
-shortestNodes = []
-
-
-shortestDistance(19, 34)
-percyPath = shortestNodes
-shortestNodes = []
-
-
-shortestDistance(35, 54)
-maryPath = shortestNodes
-shortestNodes = []
-
-
-shortestDistance(55, 73)
-johnPath = shortestNodes
-shortestNodes = []
-
-
-    
-    
+df1 = countChoices(match)
