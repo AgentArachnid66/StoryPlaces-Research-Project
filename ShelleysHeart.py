@@ -6,13 +6,18 @@ import json
 import re
 import numpy as np
 
+# Opens the data set and loads it in as JSON data
 with open("Dataset/sh(1).json") as json_data:
     data = json.load(json_data)
     
+# Normalises the json to separate DataFrames
 functionData = pd.json_normalize(data['functions'])
 
 locationData = pd.json_normalize(data['locations'])
 
+conditionsData = pd.json_normalize(data['conditions'])
+
+# Function to remove the brackers around a value
 def remove_brackets(value):
     value = str(value)
     value = re.sub(r'\'', r'', value)
@@ -24,15 +29,17 @@ def remove_brackets(value):
     else:
         return value
 
+# Loads in the page data as JSON data
 with open("Dataset/pageData.json") as json_data:
     pageData = json.load(json_data)
     
 
 # I had to manually add back the JSON that wouldn't normalise as part of 
-# of the original data set
-
+# of the original data set. If the same occurs, just append this variable to 
+# the data set and remove the duplicates
 missingJSON = \
-    [{
+    [
+    {
 		"id": "893861b0-fa80-483e-ed94-e405e91ee0b6",
 		"content": "<p>Turn on cellular data<br/>View in horizontal mode (phone sideways)<br/>Used headphones for optimal 360-degree audio<br/>Approach red markers, when they turn green, unlock scene.<br/>If 2 or more markers appear, walk to the option that sounds most interesting.</p><br/><p>TROUBLE SHOOTING:<br/>If GPS is sluggish, refresh<br/>If marker wonâ€™t turn green, select 'advanced' and click 'demo mode'.<br/></p><br/><p>Secret Scenes: each story-path contains at least one secret scene. These can only be revealed by exploring other paths and making different choices. Happy hunting!</p><p>To get started, click on the markers to find the path you want to follow.</p><img src='http://nht.ecs.soton.ac.uk/misc/sh-donotdelete.png'/>",
 		"name": "INSTRUCTIONS",
@@ -190,18 +197,21 @@ missingJSON = \
 			"page-unlocked-47480a57-3aee-4176-c171-7a02b2572a57"
 		]
 	}
-]
+    ]
 
     
-# Normalizes the main data set
+# Normalizes the main data set, which seemed to fix the above bug
 pageData = json_normalize(pageData)
 
+# Adds in the hint locations to the page Data so I can link the actual
+# locations to it
 pageData['hint.locations'] = pageData['hint.locations'].apply(lambda x:remove_brackets(x))
-
+# Using the hint locations as a key, I can map the lat/lon coordinates
+# to each page
 pageData['Latitude'] = pageData['hint.locations'].map(locationData.set_index('id')['lat'])
 pageData['Longitude'] = pageData['hint.locations'].map(locationData.set_index('id')['lon'])
 
-
+# Function to calculate distane between 2 lat/lon coordinates
 def haversine(lat1, lon1, lat2, lon2):
     if(lat1, lon1, lat2, lon2) == np.nan:
         return np.nan
@@ -216,4 +226,3 @@ def haversine(lat1, lon1, lat2, lon2):
 # credit to https://towardsdatascience.com/heres-how-to-calculate-distance-between-2-geolocations-in-python-93ecab5bbba4
 
 
-conditionsData = pd.json_normalize(data['conditions'])

@@ -20,11 +20,12 @@ dataSet['date'] = pd.to_datetime(dataSet['date'])
 
 columns = dataSet.columns
 
+# I wrote a function to re organise the describe values so that they are easier
+# to paste into the main document
 def organiseDescribe(value):
     removeWhiteSpace = re.sub(r'  ', r'', str(value))
     addColon  = re.sub(r' ', r':', removeWhiteSpace)
     rewriteSTD = re.sub("std", "Standard Deviation:", addColon)
-#    rewriteMedian = re.sub(r'50\%', "Median", rewriteSTD)
     return rewriteSTD
 
 def removeDuplicate(current, previous):
@@ -32,14 +33,13 @@ def removeDuplicate(current, previous):
         return np.nan
     else:
         return current
-fileData = ""
 
 #%%
 # This cell is the Exploratory Data Analysis - Number of Users
 
 userGrp = dataSet.groupby(dataSet["user"])
 
-fileData += "The number of users is " +str(userGrp.ngroups)
+print("The number of users is: " +userGrp.ngroups)
 
 #%%
 
@@ -64,7 +64,7 @@ validPages = validPages.dropna(subset=['pageId'])
 
 # This cell is the Exploratory Data Analysis - Pages Read Per User
 
-# After that, it was a simple case of grouping them by user and count the number
+# It was a simple case of grouping the validPages by user and count the number
 # Of occurances and store that as it's own variable
 pagePerUser = validPages.groupby('user', as_index=False)['pageId'].count()
 # Removes all columns except the relevant ones
@@ -92,8 +92,7 @@ pageFreq = validPages.groupby('pageId', as_index=False).size().reset_index()
 # other parts of the script
 pageFreq.columns = ['pageId', 'pageFreq']
 
-
-
+# Saves it to a csv for further analysis
 pageFreq.to_csv("PageReadingFrequency.csv")
 
 print("Page: " +pageFreq['pageId'].astype(str) +"  Read Frequency: " +pageFreq['pageFreq'].astype(str))

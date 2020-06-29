@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import ShelleysHeart as sh
 import CTINResearch as ctin
+import natsort
+
 
 #%%
 
@@ -211,10 +213,7 @@ DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pa
 # Counting how many of each reader class there are
 DeeperReaderClass = DetectDeepReads.groupby('reader class').count()
 DeeperReaderClass = DeeperReaderClass['user']
-    
-    
-
-
+ 
 # Getting rid of the outliers for the describe function to properly function
 distanceOutlierFilter = (distance['ApproxDistance'] >= distance['ApproxDistance'].describe()['25%'] * (2/3)) & (distance['ApproxDistance'] <= distance['ApproxDistance'].describe()['75%'] * (1.5))
 filteredDistance = distance[distanceOutlierFilter]
@@ -239,7 +238,7 @@ DeeperReaderClass.to_csv("DeepReaderClass.csv")
 # read and count the number of instances
 
 
-# To change page to analyse, change page ID here. Can be accessed from pageData
+# To change pages to analyse, change page ID here. Can be accessed from pageData
 # variable for reference
 endPages = ["47480a57-3aee-4176-c171-7a02b2572a57",
             "16b83f63-1263-4069-643a-01f7029b1f49",
@@ -267,11 +266,11 @@ UserReachedEnd['TimeDifference'] = pd.to_datetime(UserReachedEnd['NextEndDate'])
 UserReachedEnd['TimeDifference'] = UserReachedEnd['TimeDifference'].fillna(pd.to_timedelta("0 days 00:30:04.079000"))
 endPageDupFilter = UserReachedEnd['TimeDifference'] > pd.to_timedelta(timeFrame)
 
+# Filters out those who didn't get to the end in the time frame specified
 UserReachedEnd = UserReachedEnd[endPageDupFilter]
-
+# Uses this filtered DataFrame to compare users to save if they reached the
+# end page in a realisitic time frame
 DetectDeepReads['reachedEndPage'] = DetectDeepReads.user.isin(UserReachedEnd['user'])
-
-print(UserReachedEnd.groupby('user').ngroups)
 
 # I then call the function to classify the readers using this new classification
 DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pagesRead, x.TotalActiveTime, x.ApproxDistanceTravelled ,x.reachedEndPage), axis = 1)
@@ -282,12 +281,14 @@ DeeperReaderClass = DeeperReaderClass['user']
 
 DeeperReaderClass.to_csv("DeepReaderClass.csv")
 
-# Clean up to do - Get correct page name's attached to the correct page ID
+# Page name attached to the page ID
+UserReachedEnd['pageName'] = UserReachedEnd['pageId'].map(pageData.set_index('id')['name'])
+
 
 #%%
-#If natsort can't be found, paste this into the console and run it: !pip install natsort
+# If natsort can't be found, paste this into the console and run it: 
+# !pip install natsort
 
-import natsort
 
 # This cell is for Deeper Exit Point Analysis
 
