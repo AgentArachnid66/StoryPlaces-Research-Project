@@ -225,4 +225,5 @@ def haversine(lat1, lon1, lat2, lon2):
     return np.round(res, 2)
 # credit to https://towardsdatascience.com/heres-how-to-calculate-distance-between-2-geolocations-in-python-93ecab5bbba4
 
-
+print('long and Lat \n')
+print(pageData['Longitude'].max())

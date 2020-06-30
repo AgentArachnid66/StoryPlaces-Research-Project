@@ -39,7 +39,7 @@ def removeDuplicate(current, previous):
 
 userGrp = dataSet.groupby(dataSet["user"])
 
-print("The number of users is: " +userGrp.ngroups)
+print("The number of users is: " +str(userGrp.ngroups))
 
 #%%
 

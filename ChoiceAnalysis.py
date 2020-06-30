@@ -302,7 +302,6 @@ def toStringAnalysis(value):
     listToStr = re.sub(r'\ ', r'-', listToStr)
     listToStr = "-"+listToStr+"-"
     return(listToStr)
-
 # Recursive function to find path
 def shortestDistance(start, end, path=None):
     # This function is a poor man's version of Djikstra's algorithm. 
@@ -333,7 +332,8 @@ def shortestDistance(start, end, path=None):
     # It then calls itself with the start being the node closest to the 
     # current node and the end and path variables being maintained
     shortestDistance(branches[1][branches[0].index(lowest)], end, path)
-        
+
+    
 # Uses the shortestDistance function to return a list of nodes
 def findShortDist(start, end):
     path = []
@@ -534,7 +534,7 @@ print(johnPath)
 print('Finished Generated Paths')
 
 print(indices[0].getBranchResult())
-
+#%%
 visitedList = []
 print('Start Traversal')
 def depthFirst(graph, currentVertex, visited):
@@ -551,8 +551,56 @@ def depthFirst(graph, currentVertex, visited):
 
 depthFirst(graph, 0, [])
 
-print('Finished Traversal')
-print(visitedList)
+#%%
+# This function will return the pages that are the shortest distance away
+# from their previous one. It is different to the other shortest distance
+# function I have implemented as this one will ignore choices that have
+# identical distances. This is mainly to catch choices that don't require you
+# to move for the choice, ergo the distance isn't relevant and shouldn't be
+# considered in these situations
+def shortestNodes():
+    validNodes = []
+    for i in validBranchesIndex:
+        result = indices[i].getBranchResult()
+        if i == 0:
+            continue
+        print(result[1][:-1])
+        locations = result[1][:-1]
+        for j in range(len(locations)-1):
+            if locations[j] != locations[j + 1] or locations[j] != locations[j - 1]:
+                validDistance = locations[j]
+                node = result[0][j]
+                validNodes.append([node, validDistance])
+    # I now know the nodes that were closest to the branch. Now I need to 
+    # backtrack to the previous node and retrieve the possible branches
+    # and then see how many chose these nodes
+                
+    # As they may have more then one previous node, I'll need to iterate 
+    # over all of them. Luckiuly previous nodes are always less in index than
+    # the current node
+                
+    for i in range(len(validNodes)):
+        index = validNodes[i][0]
+        for k in graph[index]:
+            if k > index:
+                continue
+            elif k < index:
+                root = k
+                freq = indices[k].getBranchResult()[2]
+                options = indices[k].getBranchResult()[0]
+                validNodes[i].append(root)
+                validNodes[i].append(freq)
+                validNodes[i].append(options)
+
+    # validNodes format = shortestNode, distance, root of choice, frequency of 
+    # choice and finally the branches of that choice
+    return validNodes
+                
+validNodes = (shortestNodes())
+
+df5 = pd.DataFrame(validNodes)
+
+#%%
 # Appends them to a list
 pathsToCheck = [byronPath, percyPath, maryPath, johnPath]
 
