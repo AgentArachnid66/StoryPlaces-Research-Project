@@ -300,6 +300,7 @@ def toStringAnalysis(value):
     listToStr = ' '.join(map(str, value))
     # converts the spaces to hypens
     listToStr = re.sub(r'\ ', r'-', listToStr)
+    listToStr = "-"+listToStr+"-"
     return(listToStr)
 
 # Recursive function to find path
@@ -320,15 +321,15 @@ def shortestDistance(start, end, path=None):
     # Gets the branch information and sets the value to beat to the first
     # index
     branches = checkBranch(start)
-    lowest= branches[0][0]
+    lowest = branches[0][0]
     
     # Iterates through the branch information
     for i in branches[0]:
     # If the current item is less than the current lowest value, and the index
     # is lower than the current branch, it then becomes the new lowest value
-       if i <= lowest and branches[1][branches[0].index(i)] > start:
+       if i < lowest and branches[1][branches[0].index(i)] > start:
             lowest = i
-        
+    
     # It then calls itself with the start being the node closest to the 
     # current node and the end and path variables being maintained
     shortestDistance(branches[1][branches[0].index(lowest)], end, path)
@@ -391,13 +392,12 @@ def lookForPattern(pattern, inputString):
 # pattern had any choice.
 def patternHasBranch(value):
     integers = patternToList(value)
-    print(integers)
+    hasBranch = False
     for i in integers:
-        if i in validBranchesIndex:
-            return True
-        else:
-            return False
-      
+        if ((i in validBranchesIndex) and (i != integers[-1])):
+            hasBranch = True
+    return hasBranch
+
 # This retrieves the number of users at each node in a pattern
 def getUsersAtEachNode(value):
     integers = patternToList(value)
@@ -409,12 +409,13 @@ def getUsersAtEachNode(value):
      
 # This converts the string back into a list   
 def patternToList(pattern, endPieces = False):
-    if  endPieces:
+    if endPieces:
         value = pattern
     else:
         value = pattern[1:-1]
     integers = [int(x) for x in value.split('-')]
     return integers
+
 
 # This converts the number back into a page name
 def patternToName(value):
@@ -423,6 +424,7 @@ def patternToName(value):
     for i in integers:
         names.append(pageData.iloc[i, pageData.columns.get_loc("name")])
     return names
+
 
 
 #%%
@@ -518,10 +520,39 @@ branchDF.to_csv('BranchAnalysis.csv')
 # Finds the shortest journey from one node to the next. In this case, from
 # one major branch to the end of the story
 byronPath = findShortDist(1, 18)
+print("\n")
+print(byronPath)
 percyPath= findShortDist(19, 34)
+print("\n")
+print(percyPath)
 maryPath = findShortDist(35, 54)
+print("\n")
+print(maryPath)
 johnPath = findShortDist(55, 73)
+print("\n")
+print(johnPath)
+print('Finished Generated Paths')
 
+print(indices[0].getBranchResult())
+
+visitedList = []
+print('Start Traversal')
+def depthFirst(graph, currentVertex, visited):
+    visited.append(currentVertex)
+    if currentVertex == 0:
+        for vertex in graph[currentVertex]:
+            if vertex not in visited:
+                depthFirst(graph, vertex, visited.copy())
+    else:
+        for vertex in graph[currentVertex][:-2]:
+            if vertex not in visited:
+                depthFirst(graph, vertex, visited.copy())
+    visitedList.append(visited)
+
+depthFirst(graph, 0, [])
+
+print('Finished Traversal')
+print(visitedList)
 # Appends them to a list
 pathsToCheck = [byronPath, percyPath, maryPath, johnPath]
 
@@ -537,7 +568,7 @@ for k in range(17):
 
 # Adds the original paths so that they can be used in the choice analysis
 newPaths += pathsToCheck
-
+newPaths += visitedList
 # A new list to store the paths to look for
 toLook = []
 # Bit of cleanup to reduce time and resources required to run. It removes
