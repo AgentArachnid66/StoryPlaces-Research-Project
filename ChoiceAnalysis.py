@@ -425,7 +425,86 @@ def patternToName(value):
         names.append(pageData.iloc[i, pageData.columns.get_loc("name")])
     return names
 
+def convertstr(string):
+    # This function converts the string that some columns comes in to a
+    # list so I can access the items within it
+    
+    # Removes the square brackets
+    reformat = re.sub(r'\[', r'', string)
+    reformat = re.sub(r'\]', r'', reformat)
+    # Splits it into a list using the commas
+    reformat = reformat.split(',')
+    integers = []
+    # Iterates through the new list of strings and converts them to
+    # integers or floats.
+    for i in reformat:
+        try:
+            integers.append(int(i))
+        except:
+            integers.append(float(i))
+    # Returns the list
+    return integers
 
+# This function will return the pages that are the shortest distance away
+# from their previous one. It is different to the other shortest distance
+# function I have implemented as this one will ignore choices that have
+# identical distances. This is mainly to catch choices that don't require you
+# to move for the choice, ergo the distance isn't relevant and shouldn't be
+# considered in these situations
+def shortestNodes():
+    validNodes = []
+    for i in validBranchesIndex:
+        result = indices[i].getBranchResult()
+        if i == 0:
+            continue
+        print(result[1][:-1])
+        locations = result[1][:-1]
+        for j in range(len(locations)-1):
+            if locations[j] != locations[j + 1] or locations[j] != locations[j - 1]:
+                validDistance = locations[j]
+                node = result[0][j]
+                validNodes.append([node, validDistance])
+    # I now know the nodes that were closest to the branch. Now I need to 
+    # backtrack to the previous node and retrieve the possible branches
+    # and then see how many chose these nodes
+                
+    # As they may have more then one previous node, I'll need to iterate 
+    # over all of them. Luckiuly previous nodes are always less in index than
+    # the current node
+                
+    for i in range(len(validNodes)):
+        index = validNodes[i][0]
+        for k in graph[index]:
+            if k > index:
+                continue
+            elif k < index:
+                root = k
+                freq = indices[k].getBranchResult()[2]
+                options = indices[k].getBranchResult()[0]
+                validNodes[i].append(root)
+                validNodes[i].append(freq[:-1])
+                validNodes[i].append(options[:-1])
+
+    # validNodes format = shortestNode, distance, root of choice, frequency of 
+    # choice and finally the branches of that choice
+    return validNodes
+                
+
+def getProportion(closestNode, freq, branches):
+    # gets the index of the node in the branch list
+    index = branches.index(closestNode)
+    closest = 0
+    furthest = 0
+    # iterates through the frequency list
+    for i in range (len(freq)):
+        # checks if the current index is the same as the one for the 
+        # closest node
+        if i == index:
+            closest += freq[i]
+        else:
+            furthest += freq[i]
+    # returns both as they are both relevant results
+    return closest, furthest
 
 #%%
 
@@ -552,54 +631,17 @@ def depthFirst(graph, currentVertex, visited):
 depthFirst(graph, 0, [])
 
 #%%
-# This function will return the pages that are the shortest distance away
-# from their previous one. It is different to the other shortest distance
-# function I have implemented as this one will ignore choices that have
-# identical distances. This is mainly to catch choices that don't require you
-# to move for the choice, ergo the distance isn't relevant and shouldn't be
-# considered in these situations
-def shortestNodes():
-    validNodes = []
-    for i in validBranchesIndex:
-        result = indices[i].getBranchResult()
-        if i == 0:
-            continue
-        print(result[1][:-1])
-        locations = result[1][:-1]
-        for j in range(len(locations)-1):
-            if locations[j] != locations[j + 1] or locations[j] != locations[j - 1]:
-                validDistance = locations[j]
-                node = result[0][j]
-                validNodes.append([node, validDistance])
-    # I now know the nodes that were closest to the branch. Now I need to 
-    # backtrack to the previous node and retrieve the possible branches
-    # and then see how many chose these nodes
-                
-    # As they may have more then one previous node, I'll need to iterate 
-    # over all of them. Luckiuly previous nodes are always less in index than
-    # the current node
-                
-    for i in range(len(validNodes)):
-        index = validNodes[i][0]
-        for k in graph[index]:
-            if k > index:
-                continue
-            elif k < index:
-                root = k
-                freq = indices[k].getBranchResult()[2]
-                options = indices[k].getBranchResult()[0]
-                validNodes[i].append(root)
-                validNodes[i].append(freq)
-                validNodes[i].append(options)
 
-    # validNodes format = shortestNode, distance, root of choice, frequency of 
-    # choice and finally the branches of that choice
-    return validNodes
-                
 validNodes = (shortestNodes())
 
 df5 = pd.DataFrame(validNodes)
-
+# This will require minor alterations. When there are 2 identical nodes with different
+# root nodes, move one of the copied values added by the shortestNodes function
+# into the appropriate column. If I have more time, I'l dedicate it to making 
+# this process more automated.
+# 
+df5.to_csv('locationBasedChoice.csv')
+locationBasedChoice = pd.read_csv('C:/Users/brown/Downloads/locationBasedChoice.csv')
 #%%
 # Appends them to a list
 pathsToCheck = [byronPath, percyPath, maryPath, johnPath]
@@ -667,3 +709,126 @@ aboveThreshold['NamedPattern'] = aboveThreshold['pattern'].apply(lambda x : patt
 aboveThreshold = aboveThreshold[['pattern', 'NamedPattern', 'NumUsersMatchPattern', 'NumUsersAtEachNode']]
 # Saves it to a csv
 aboveThreshold.to_csv('ChoiceAnalysis.csv')
+
+#%%
+
+# Retrieves the dataframe from further up, but as it needed manual altering, this 
+# is required
+math = locationBasedChoice.rename(columns={'Closest Choice': 'ClosestChoice','Root Node': 'RootNode','Distance From Root': 'DistanceFromRoot' ,'Root Branches': 'RootBranches','Root Branch Frequency': 'RootBranchFrequency'})
+
+
+math['RootBranches'] = math['RootBranches'].apply(lambda x: convertstr(x))
+math['RootBranchFrequency'] = math['RootBranchFrequency'].apply(lambda x: convertstr(x))
+
+    
+math['proportions'] = math.apply(lambda x: getProportion(x.ClosestChoice, x.RootBranchFrequency, x.RootBranches), axis =1)
+
+# Converts it to a list of tuples
+proportions = math['proportions'].tolist()
+closest = 0
+furthest = 0
+for i in proportions:
+    # As it's a tuple, I can access specific parts of it
+    # and I know where the closest and furthest numbers are
+    closest += i[0]
+    furthest += i[1]
+
+# This saves another tuple with total number of users who 
+# went certain ways and total percentage of instances of users
+# going the shorter way
+percentageClosest = closest, furthest, (closest/(closest+furthest))
+
+#%% 
+from statistics import mean
+import numpy
+# This cell is for exploring the correlation relative distance and proportion
+# of choice. To do this, I will need to get the relative distance between each
+# node and also the proportion of the choice for each branch. 
+
+# First I will get all the branches and their distance from the root
+# then find their relative distance and the frequency they were visited
+# then find the correlation
+
+choiceDistDF = locationBasedChoice[['Root Node','Root Branch Frequency' ,'Root Branches']]
+choiceDistDF['Distances'] = choiceDistDF['Root Node'].apply(lambda x: checkBranch(x)[0][:-1])
+
+# Relative distance = average distance from root to brances - distance from branch to node
+
+choiceDistDF['AverageDistance'] = choiceDistDF.apply(lambda x: mean(x.Distances), axis = 1)
+
+def relativeDistance(average, points):
+    relativeDistances = []
+    for i in points:
+        relativeDistances.append(round(i - average, 2))
+    return relativeDistances
+
+choiceDistDF['RelativeDistance'] = choiceDistDF.apply(lambda x: relativeDistance(x.AverageDistance, x.Distances), axis=1)
+
+choiceDist = choiceDistDF[['Root Branch Frequency', 'RelativeDistance']].rename(columns={'Root Branch Frequency': 'RootBranchFrequency'})
+
+choiceDist['RootBranchFrequency'] = choiceDist['RootBranchFrequency'].apply(lambda x: convertstr(x))
+
+freq = choiceDist['RootBranchFrequency'].tolist()
+proportions = []
+for i in freq:
+    entire = sum(i)
+    for j in i:
+        proportions.append(round(j/entire,3))
+
+    
+    
+
+relDist = choiceDist['RelativeDistance'].tolist()
+rel2 = []
+for i in relDist:
+    for j in i:
+        rel2.append(j)
+
+choiceDist = pd.DataFrame(proportions, rel2[:-1]).reset_index().rename(columns={'index': 'Relative Distance', 0: 'Proportion'})
+                                                                 
+print(choiceDist.corr())
+#%%
+from scipy import stats
+print(stats.pearsonr(proportions, rel2[:-1]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -227,3 +227,6 @@ def haversine(lat1, lon1, lat2, lon2):
 
 print('long and Lat \n')
 print(pageData['Longitude'].max())
+
+pageData.to_csv('PageData.csv')
+
