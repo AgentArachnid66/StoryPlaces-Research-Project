@@ -158,6 +158,9 @@ print(organiseDescribe(timePage['timeOnPage'].describe()))
 # page and count if there are any pages that are the most likely to be the 
 # exit point.
 
+exitPoints['Latitude'] = exitPoints['pageId'].map(sh.pageData.set_index('id')['Latitude'])
+exitPoints['Longitude'] = exitPoints['pageId'].map(sh.pageData.set_index('id')['Longitude'])
+
 sortExit = (exitPoints.groupby('pageId').size().sort_values(ascending=False)).reset_index()
 sortExit.to_csv("ExitPoints.csv")
 

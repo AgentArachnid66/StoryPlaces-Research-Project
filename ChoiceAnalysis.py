@@ -5,9 +5,11 @@ import CTINResearch as orctin
 import re
 import numpy as np
 from ShelleysHeart import haversine as haversine
+from scipy import stats
 
+#%%
 data = orctin.validPages
-
+exitPoints = orctin.exitPoints[['pageId']]
 pageData = ctin.sh.pageData
 
 #%%
@@ -787,18 +789,23 @@ for i in relDist:
 choiceDist = pd.DataFrame(proportions, rel2[:-1]).reset_index().rename(columns={'index': 'Relative Distance', 0: 'Proportion'})
                                                                  
 print(choiceDist.corr())
-#%%
-from scipy import stats
 print(stats.pearsonr(proportions, rel2[:-1]))
 
+#%%
 
+# This cell will format the dataframes for analysis in R
+# More specifically, it will do the following:
+#   - Get the pages after the exit page as this might be the contributing
+#   factor for users exiting
+exitPoints['Frequency'] = exitPoints['pageId']
 
+branchGrp = exitPoints.groupby('pageId').count()
+branchGrp = branchGrp.reset_index()
+branchGrp['ExitBranches'] = branchGrp.apply(lambda x: checkBranch(getIndex(x.pageId))[1], axis=1)
+branchGrp['Latitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Latitude'])
+branchGrp['Longitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Longitude'])
 
-
-
-
-
-
+branchGrp.to_csv('ExitPointBranchs.csv')
 
 
 

@@ -226,7 +226,25 @@ def haversine(lat1, lon1, lat2, lon2):
 # credit to https://towardsdatascience.com/heres-how-to-calculate-distance-between-2-geolocations-in-python-93ecab5bbba4
 
 print('long and Lat \n')
-print(pageData['Longitude'].max())
+print(pageData['Latitude'].mean())
 
+
+#%%
+def getTag(index):
+    if index >= 1 and index < 19:
+        return "Byron"
+    elif index >= 19 and index < 35:
+        return "Percy"
+    elif index >= 35 and index < 55:
+        return "Mary"
+    elif index >= 55 and index < 74:
+        return "John"
+    else:
+        return "No Story"
+    
+
+
+pageData['Tag'] = pageData.apply(lambda x: getTag(pd.Index(pageData['id']).get_loc(x.id)), axis=1)
+pageData['OriginalIndex'] = pageData.apply(lambda x: pd.Index(pageData['id']).get_loc(x.id), axis=1)
 pageData.to_csv('PageData.csv')
 
