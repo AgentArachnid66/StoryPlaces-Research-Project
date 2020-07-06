@@ -92,6 +92,9 @@ pageFreq = validPages.groupby('pageId', as_index=False).size().reset_index()
 # other parts of the script
 pageFreq.columns = ['pageId', 'pageFreq']
 
+sh.pageData['Frequency'] = sh.pageData['id'].map(pageFreq.set_index('pageId')['pageFreq'])
+sh.pageData.to_csv('PageData.csv')
+
 # Saves it to a csv for further analysis
 pageFreq.to_csv("PageReadingFrequency.csv")
 

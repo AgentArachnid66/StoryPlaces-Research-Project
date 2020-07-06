@@ -4,7 +4,7 @@ import CTINDeepReaderClassification as ctin
 import CTINResearch as orctin
 import re
 import numpy as np
-from ShelleysHeart import haversine as haversine
+from ShelleysHeart import haversine
 from scipy import stats
 
 #%%
@@ -804,8 +804,30 @@ branchGrp = branchGrp.reset_index()
 branchGrp['ExitBranches'] = branchGrp.apply(lambda x: checkBranch(getIndex(x.pageId))[1], axis=1)
 branchGrp['Latitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Latitude'])
 branchGrp['Longitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Longitude'])
-
 branchGrp.to_csv('ExitPointBranchs.csv')
+#%%
+
+
+exitBranches = []
+for i in branchGrp['ExitBranches'].tolist():
+    for j in i:
+        exitBranches.append(j)
+        
+frequency = pd.DataFrame(exitBranches).reset_index().sort_values(0).groupby(0).count().reset_index()
+
+
+
+#%%
+
+
+# This cell will format dataframes for use in making graphs
+
+# First one is data for use in a heat map
+
+heatmapData = ctin.sh.pageData[['Latitude', 'Longitude', 'Frequency']]
+heatmapData.to_csv("heatMapData.csv")
+
+exitPointHeatMap = branchGrp[['Latitude', 'Longitude', 'Frequency']]
 
 
 
