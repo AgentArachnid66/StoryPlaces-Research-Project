@@ -9,3 +9,7 @@ The CTIN Research Deep Reader Classification performs the more advanced data ana
 The Shelleys Heart script retrieves necessary information and formats it to be used in deeper reader classification such as the locations of each page. It's also where the Haversine function is, which finds the distance between 2 locations using latitude and longitude 
 
 The Choice Analysis script tries to find patterns in the choices that people make with Shelley's Heart. It holds a dictionary that links each node to each connected node. It also holds a lot of important functions to traverse the graphically representation of Shelley's Heart and allows me to analyse people's choices with their experiences throughout Shelley's Heart
+
+The R files are to be run to generate the graphs for visualisation of the data sets. It requires a Google API key to be put in the Key variable.
+
+The graphs folder are the files that the R and other applications produced to visualise the data
