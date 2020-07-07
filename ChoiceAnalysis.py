@@ -812,9 +812,25 @@ exitBranches = []
 for i in branchGrp['ExitBranches'].tolist():
     for j in i:
         exitBranches.append(j)
-        
-frequency = pd.DataFrame(exitBranches).reset_index().sort_values(0).groupby(0).count().reset_index()
+      
+def getLocationAtIndex(index, Lon=False):  
+    # Gets the right coordinate for the right node
+    if Lon:
+        Lon = pageData.iloc[index,9]
+        return Lon
+    else:
+        Lat = pageData.iloc[index,8]
+        return Lat
+    
+                
+                
+test = pd.DataFrame(exitBranches)
+exitBranchesDF = test[0].value_counts().reset_index().rename(columns = {'index': 'exitBranchIndex', 0: 'Frequency'})
+exitBranchesDF['Lat'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x))
+exitBranchesDF['Lon'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x, Lon=True))
+exitBranchesDF = exitBranchesDF.dropna()
 
+exitBranchesDF.to_csv('ExitBranchesWLocations.csv')
 
 
 #%%
@@ -829,17 +845,28 @@ heatmapData.to_csv("heatMapData.csv")
 
 exitPointHeatMap = branchGrp[['Latitude', 'Longitude', 'Frequency']]
 
+# Next is formatting the graph to generate the routes between nodes
 
+# To do this, I will iterate through the keys and add them as a tuple containing
+# the root and the destination node's latitiude and longitude coordinates
+# I'll then save this as a dataframe as a csv for use in R
 
+routes = []
+for i in range(len(graph)):
+    for j in graph[i]:
+        valid = False
+        rootLat = pageData.iloc[i,8]
+        rootLon = pageData.iloc[i,9]
+        desLat = pageData.iloc[j,8]
+        desLon = pageData.iloc[j,9]
+        tag = pageData.iloc[j, 10]
+        if desLat != np.nan and desLon != np.nan:
+            if rootLat != np.nan and rootLon != np.nan:
+                routes.append((rootLat, rootLon, desLat, desLon, tag))
 
-
-
-
-
-
-
-
-
+routesDF = pd.DataFrame(routes).rename(columns={0: "RootLat", 1: "RootLon", 2: "DestinationLat", 3: "DestinationLon", 4: "Index"})
+routesDF = routesDF.dropna()
+routesDF.to_csv("Routes.csv")
 
 
 
