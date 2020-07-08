@@ -19,6 +19,14 @@ ShelleysHeart_basemap <- get_map(location=c(-1.8750486246575349,50.7203983739725
 p <- ggmap(ShelleysHeart_basemap)
 
 
+satelliteSH <- get_map(location = c(-1.8750486246575349,50.72039837397259), zoom=18, maptype="satellite", source='google')
+satelliteSH <- ggmap(satelliteSH)
+png(file="ShelleysHeart_Satellite.png")
+ggsave(
+  "ShelleysHeart_Satellite.png",
+  plot(satelliteSH)
+)
+
 
 # Reads the dataframe made in Python into a dataframe that R can use
 rawpageData <- read.csv("C:/Users/brown/.spyder-py3/PageData.csv")
@@ -100,18 +108,18 @@ byron_BaseMap <- get_map(location=c(mean(byron$Longitude),mean(byron$Latitude)),
 byron_ggmap <- ggmap(byron_BaseMap)
 byronPoints <- geom_point(data=byron, aes(x=Longitude, y=Latitude), colour = "blue", size=pointSize)
 byronMap <- byron_ggmap + byronPoints + geom_text(data=byron, aes(x=Longitude, y=Latitude, label=byron$X, colour="white"))
-png(file = "byronMap.png", res =50)
-ggsave(
-  "byronMap.png",
-  plot(byronMap),
-  dpi = 1200
-)
-png(file = "byronRoutes.png")
-ggsave(
-  "byronRoutes.png",
-  plot(byronMap + geom_segment(data=byronRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
-                             arrow = arrow(length = unit(0.1, "cm"))))
-)
+#png(file = "byronMap.png", res =50)
+#ggsave(
+#  "byronMap.png",
+#  plot(byronMap),
+#  dpi = 1200
+#)
+#png(file = "byronRoutes.png")
+#ggsave(
+#  "byronRoutes.png",
+#  plot(byronMap + geom_segment(data=byronRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
+#                             arrow = arrow(length = unit(0.1, "cm"))))
+#)
 
 
 
@@ -120,58 +128,58 @@ percy_BaseMap <- get_map(location=c(mean(percy$Longitude),mean(percy$Latitude)),
 percy_ggmap <- ggmap(percy_BaseMap)
 percyPoints <- geom_point(data=percy, aes(x=Longitude, y=Latitude), colour="red", size=pointSize)
 percyMap <- percy_ggmap + percyPoints + geom_text(data=percy, aes(x=Longitude, y=Latitude, label=percy$X, colour="white"))
-png(file = "percyMap.png", res =50)
-ggsave(
-  "percyMap.png",
-  plot(percyMap),
-  dpi = 1200
-)
-png(file = "percyRoutes.png")
-ggsave(
-  "percyRoutes.png",
-  plot(percyMap + geom_segment(data=percyRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
-                               arrow = arrow(length = unit(0.1, "cm")))
-  )
-)
+#png(file = "percyMap.png", res =50)
+#ggsave(
+#  "percyMap.png",
+#  plot(percyMap),
+#  dpi = 1200
+#)
+#png(file = "percyRoutes.png")
+#ggsave(
+#  "percyRoutes.png",
+#  plot(percyMap + geom_segment(data=percyRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
+#                               arrow = arrow(length = unit(0.1, "cm")))
+#  )
+#)
 
 
 # Plots the Mary Map
 mary_BaseMap <- get_map(location=c(mean(mary$Longitude),mean(mary$Latitude)), zoom=18, maptype = 'roadmap', source = 'google')
 mary_ggmap <- ggmap(mary_BaseMap)
 maryPoints <- geom_point(data=mary, aes(x=Longitude, y=Latitude),colour = "orange" ,size=pointSize)
-maryMap <- mary_ggmap + maryPoints + geom_text(data=mary, aes(x=Longitude, y=Latitude, label=mary$X, colour="white"))
-png(file = "maryMap.png", res =50)
-ggsave(
-  "maryMap.png",
-  plot(maryMap),
-  dpi = 1200
-)
-png(file = "maryRoutes.png")
-ggsave(
-  "maryRoutes.png",
-  plot(maryMap + geom_segment(data=maryRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
-                               arrow = arrow(length = unit(0.1, "cm")))
-  )
-)
+maryMap <- mary_ggmap + maryPoints + geom_text(data=mary, aes(x=Longitude, y=Latitude, label=mary$X, colour="black"))
+#png(file = "maryMap.png", res =50)
+#ggsave(
+#  "maryMap.png",
+#  plot(maryMap),
+#  dpi = 1200
+#)
+#png(file = "maryRoutes.png")
+#ggsave(
+#  "maryRoutes.png",
+#  plot(maryMap + geom_segment(data=maryRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
+#                               arrow = arrow(length = unit(0.1, "cm")))
+#  )
+#)
 
 # Plots the John Map
 john_BaseMap <- get_map(location=c(mean(john$Longitude),mean(john$Latitude)), zoom=18, maptype = 'roadmap', source = 'google')
 john_ggmap <- ggmap(john_BaseMap)
 johnPoints <- geom_point(data=john, aes(x=Longitude, y=Latitude),colour="green" ,size=pointSize)
 johnMap <- john_ggmap + johnPoints + geom_text(data=john, aes(x=Longitude, y=Latitude, label=john$X))
-png(file = "johnMap.png", res =50)
-ggsave(
-  "johnMap.png",
-  plot(johnMap),
-  dpi = 1200
-)
-png(file = "johnRoutes.png")
-ggsave(
-  "johnRoutes.png",
-  plot(johnMap + geom_segment(data=johnRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
-                               arrow = arrow(length = unit(0.1, "cm")))
-  )
-)
+#png(file = "johnMap.png", res =50)
+#ggsave(
+#  "johnMap.png",
+#  plot(johnMap),
+#  dpi = 1200
+#)
+#png(file = "johnRoutes.png")
+#ggsave(
+#  "johnRoutes.png",
+#  plot(johnMap + geom_segment(data=johnRoutes, aes(x = RootLon, y = RootLat, xend = DestinationLon, yend = DestinationLat),
+#                               arrow = arrow(length = unit(0.1, "cm")))
+#  )
+#)
 
 
 # Compiles all of the points and map into one object
@@ -182,13 +190,85 @@ overall <- overall+ johnPoints
 overall <- overall + geom_text(data=pageData, aes(x=Longitude, y=Latitude, label=pageData$X))
 
 # Exports the plot as a png
-png(file = "pagePoints.png", res=50)
-plot(overall)
+#png(file = "pagePoints.png", res=50)
+#plot(overall)
+#ggsave(
+#  "pagePoints.png",
+#  plot(overall),
+#  dpi = 1200
+#)
+
+branches <- read.csv("C:/Users/brown/.spyder-py3/BranchesWOptionsLocation.csv")
+byronBranches <- branches %>% 
+  filter(Tag=="Byron")
+
+percyBranches <- branches %>% 
+  filter(Tag=="Percy")
+
+maryBranches <- branches %>% 
+  filter(Tag=="Mary")
+
+johnBranches <- branches %>% 
+  filter(Tag=="John")
+
+png(file="ByronBranches.png")
 ggsave(
-  "pagePoints.png",
-  plot(overall),
-  dpi = 1200
+  "ByronBranches.png",
+plot(byron_ggmap + geom_segment(data=byronBranches, aes(x = RootLon, y = RootLat, xend = DesLon, yend = DesLat),
+                arrow = arrow(length = unit(0.1, "cm")) +
+                geom_point(data=byronBranches, aes(x=RootLon, y=RootLat),colour = "blue" ,size=pointSize)) +
+                geom_point(data=byronBranches, aes(x=DesLon, y=DesLat),colour = "blue" ,size=pointSize))+
+                geom_text(data=byronBranches, aes(x=RootLon, y=RootLat, label=RootIndex, colour="white")) +
+                geom_text(data=byronBranches, aes(x=DesLon, y=DesLat, label=DesIndex, colour="white"))
 )
+
+png(file="PercyBranches.png")
+ggsave(
+  "PercyBranches.png",
+  plot(percy_ggmap + geom_segment(data=percyBranches, aes(x = RootLon, y = RootLat, xend = DesLon, yend = DesLat),
+                arrow = arrow(length = unit(0.1, "cm")) +
+                geom_point(data=percyBranches, aes(x=RootLon, y=RootLat),colour = "red" ,size=pointSize)) +
+                geom_point(data=percyBranches, aes(x=DesLon, y=DesLat),colour = "red" ,size=pointSize))+
+                geom_text(data=percyBranches, aes(x=RootLon, y=RootLat, label=RootIndex, colour="white")) +
+                geom_text(data=percyBranches, aes(x=DesLon, y=DesLat, label=DesIndex, colour="white"))
+)
+
+png(file="MaryBranches.png")
+ggsave(
+  "MaryBranches.png",
+  plot(mary_ggmap + geom_segment(data=maryBranches, aes(x = RootLon, y = RootLat, xend = DesLon, yend = DesLat),
+                arrow = arrow(length = unit(0.1, "cm")) +
+                geom_point(data=maryBranches, aes(x=RootLon, y=RootLat),colour = "orange" ,size=pointSize)) +
+                geom_point(data=maryBranches, aes(x=DesLon, y=DesLat),colour = "orange" ,size=pointSize))+
+                geom_text(data=maryBranches, aes(x=RootLon, y=RootLat, label=RootIndex, colour="black")) +
+                geom_text(data=maryBranches, aes(x=DesLon, y=DesLat, label=DesIndex, colour="black"))
+)
+
+png(file="JohnBranches.png")
+ggsave(
+  "JohnBranches.png",
+  plot(john_ggmap + geom_segment(data=johnBranches, aes(x = RootLon, y = RootLat, xend = DesLon, yend = DesLat),
+                arrow = arrow(length = unit(0.1, "cm")) +
+                geom_point(data=johnBranches, aes(x=RootLon, y=RootLat),colour = "green" ,size=pointSize)) +
+                geom_point(data=johnBranches, aes(x=DesLon, y=DesLat),colour = "green" ,size=pointSize))+
+                geom_text(data=johnBranches, aes(x=RootLon, y=RootLat, label=RootIndex)) +
+                geom_text(data=johnBranches, aes(x=DesLon, y=DesLat, label=DesIndex))
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
