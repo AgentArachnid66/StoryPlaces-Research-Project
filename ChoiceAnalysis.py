@@ -217,7 +217,7 @@ def getIndex(value, useBranch = False):
         except:
             index = value
             print('nope')
-    
+    # Returns the index of the page
     return index
 
 # This function just compares 2 objects/values and returns NaN if they're the 
@@ -272,6 +272,7 @@ def checkBranch(branch):
     # one and the number of nodes that have come before this. 
     return distance, branches, Nodes, len(Nodes)
 
+
 # This function returns the nodes in between the root node and the
 # node specified. It can save the path to a separate variable     
 def backTracking(Node, end=0, path=None):
@@ -290,11 +291,16 @@ def backTracking(Node, end=0, path=None):
         #calls itself if the end hasn't been reached
         backTracking(graph[Node][-1])
  
+    
 # Calls the recursive function and returns the path between the 2 nodes
 def getBackTrack(start, end):
+    # Defines local list
     path = []
+    # Calls the function passing the local list as path
     backTracking(start, end, path)
+    # Returns the local list
     return path
+
 
 # converts the list to a string with delinearators
 def toStringAnalysis(value):
@@ -304,6 +310,8 @@ def toStringAnalysis(value):
     listToStr = re.sub(r'\ ', r'-', listToStr)
     listToStr = "-"+listToStr+"-"
     return(listToStr)
+
+
 # Recursive function to find path
 def shortestDistance(start, end, path=None):
     # This function is a poor man's version of Djikstra's algorithm. 
@@ -338,10 +346,14 @@ def shortestDistance(start, end, path=None):
     
 # Uses the shortestDistance function to return a list of nodes
 def findShortDist(start, end):
+    # Local list to hold path
     path = []
+    # Calls function, passing local variable as path
     shortestDistance(start, end, path)
+    # Returns the local list
     return path
         
+
 # This takes in multiple arguments to split up the pattern in differing
 # sizes, with offset. Reverse is to check for patterns of back. Offset is
 # so that you can do another round of splitting, but by offsetting the slices
@@ -381,54 +393,87 @@ def splitUpPath(path, segmentSize, reverse= False, withOffset = False, offset = 
     sortedSegments = [x for x in segments if len(x)>1]
     return sortedSegments
 
+
 #I input the pattern to look for and the location to look for the pattern in
 def lookForPattern(pattern, inputString):
-    # Copy the code that converts the users pages to the same format
+    # Converts the pattern from a list/array to a string
     formatPattern = ' '.join(map(str, pattern))
+    # Substitutes the spaces with hyphens
     formatPattern = re.sub(r'\ ', r'-', formatPattern)
+    # Adds in hypens at beginning and end of string
     formatPattern = "-"+formatPattern+"-"
+    # Looks for the pattern in the inputString
     matches = re.findall(formatPattern, inputString)
+    # Returns all matches found
     return matches
+
 
 # This checks if the pattern has branch inside. I used this to check if the 
 # pattern had any choice.
 def patternHasBranch(value):
+    # Converts the pattern to a list
     integers = patternToList(value)
+    # Initialises the local bool
     hasBranch = False
+    # Iterates through the pattern
     for i in integers:
+        # Simply checks if any of the integers are a valid branch and aren't
+        # the last integer in the pattern. Ie the pattern doesn't end on
+        # a branch in the story and has a valid choice to analyse
         if ((i in validBranchesIndex) and (i != integers[-1])):
+            # Sets the local bool and breaks out of the loop to prevent
+            # it being overwritten
             hasBranch = True
+            break
+    # Returns the local bool
     return hasBranch
+
 
 # This retrieves the number of users at each node in a pattern
 def getUsersAtEachNode(value):
+    # Converts the pattern to a list
     integers = patternToList(value)
+    # Local list
     numUsers = []
+    # Iterates through the integers
     for i in integers:
+        # Retrieves the number of users at each node 
         currentNodeUsers = indices[i].getNumUsers()
+        # Appends that variable to the local list
         numUsers.append(currentNodeUsers)
+    # Returns local list
     return numUsers
      
 # This converts the string back into a list   
 def patternToList(pattern, endPieces = False):
+    # Firstly it determines if the end pieces should be included in the
+    # conversion
     if endPieces:
         value = pattern
     else:
         value = pattern[1:-1]
+    # It then splits the pattern based on the hypen, then converts
+    # them to an integer as otherwise they'd still be strings
     integers = [int(x) for x in value.split('-')]
+    # Returns the list of integers
     return integers
 
 
 # This converts the number back into a page name
 def patternToName(value):
+    # Converts the pattern to a list of integers
     integers = patternToList(value)
+    # List to hold the page names
     names = []
+    # Iterates through the integers list
     for i in integers:
+        # Appends the page name using the integer used in the iterator
         names.append(pageData.iloc[i, pageData.columns.get_loc("name")])
+    # Returns the list of page names
     return names
 
 def convertstr(string):
-    # This function converts the string that some columns comes in to a
+    # This function converts the string, that some columns comes in, to a
     # list so I can access the items within it
     
     # Removes the square brackets
@@ -440,6 +485,8 @@ def convertstr(string):
     # Iterates through the new list of strings and converts them to
     # integers or floats.
     for i in reformat:
+        # As I don't know which numeric format the data is going to come in
+        # as, I have prepared for both.
         try:
             integers.append(int(i))
         except:
@@ -455,16 +502,24 @@ def convertstr(string):
 # considered in these situations
 def shortestNodes():
     validNodes = []
+    # Iterates through the valid branches and retrieves the nodes
+    # distances and the frequency
     for i in validBranchesIndex:
         result = indices[i].getBranchResult()
+        # Ignores 0 as it's irrelevant in this context
         if i == 0:
             continue
-        print(result[1][:-1])
+        # Gets the distances minus the last one
         locations = result[1][:-1]
+        # Iterates through the locations
         for j in range(len(locations)-1):
+            # Checks for duplicated data
             if locations[j] != locations[j + 1] or locations[j] != locations[j - 1]:
+                # Saves the valid distance to local variable
                 validDistance = locations[j]
+                # Saves the node itself to a local variable
                 node = result[0][j]
+                # Appends the local variables to another local variable
                 validNodes.append([node, validDistance])
     # I now know the nodes that were closest to the branch. Now I need to 
     # backtrack to the previous node and retrieve the possible branches
@@ -473,17 +528,23 @@ def shortestNodes():
     # As they may have more then one previous node, I'll need to iterate 
     # over all of them. Luckiuly previous nodes are always less in index than
     # the current node
-                
+         
+            
+    # Iterates through the local variable
     for i in range(len(validNodes)):
+        # Saves the node in question to a local variable
         index = validNodes[i][0]
+        # Iterates through the node's connections
         for k in graph[index]:
+            # If the connection is forward then it is disregarded
             if k > index:
                 continue
+            # Only interested in the connections backwards
             elif k < index:
-                root = k
+                # Saves the relevant variables
                 freq = indices[k].getBranchResult()[2]
                 options = indices[k].getBranchResult()[0]
-                validNodes[i].append(root)
+                validNodes[i].append(k)
                 validNodes[i].append(freq[:-1])
                 validNodes[i].append(options[:-1])
 
@@ -508,6 +569,8 @@ def getProportion(closestNode, freq, branches):
     # returns both as they are both relevant results
     return closest, furthest
 
+
+    
 #%%
 
 
@@ -618,19 +681,32 @@ print(indices[0].getBranchResult())
 #%%
 visitedList = []
 print('Start Traversal')
+
+
+# Function that goes through the entire graph and retrieves all the paths
+# that could be taken
 def depthFirst(graph, currentVertex, visited):
+    # Appends the current vertex to the list
     visited.append(currentVertex)
+    # As 0 is a unique case, it requires a unique condition
     if currentVertex == 0:
+        # Iterates through the connections of that vertex and checks if 
+        # it is not already been visited
         for vertex in graph[currentVertex]:
             if vertex not in visited:
+                # If it is a new vertex, it will call itself and create
+                # a copy of the visited list. This is how it retrieves all 
+                # possible paths
                 depthFirst(graph, vertex, visited.copy())
     else:
         for vertex in graph[currentVertex][:-2]:
             if vertex not in visited:
                 depthFirst(graph, vertex, visited.copy())
     visitedList.append(visited)
+    
 
 depthFirst(graph, 0, [])
+
 
 #%%
 
@@ -798,39 +874,21 @@ print(stats.pearsonr(proportions, rel2[:-1]))
 #   - Get the pages after the exit page as this might be the contributing
 #   factor for users exiting
 exitPoints['Frequency'] = exitPoints['pageId']
-
+# Counts frequency of exit at each Page Id
 branchGrp = exitPoints.groupby('pageId').count()
+# Returns it as a dataframe
 branchGrp = branchGrp.reset_index()
+# Gets the branches
 branchGrp['ExitBranches'] = branchGrp.apply(lambda x: checkBranch(getIndex(x.pageId))[1], axis=1)
+# Gets the latitude
 branchGrp['Latitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Latitude'])
+# Gets the longitude
 branchGrp['Longitude'] = branchGrp['pageId'].map(ctin.sh.pageData.set_index('id')['Longitude'])
 branchGrp.to_csv('ExitPointBranchs.csv')
-#%%
+#
 
+#This is necessary for later on in the code, but doesn't need to be exported
 
-exitBranches = []
-for i in branchGrp['ExitBranches'].tolist():
-    for j in i:
-        exitBranches.append(j)
-      
-def getLocationAtIndex(index, Lon=False):  
-    # Gets the right coordinate for the right node
-    if Lon:
-        Lon = pageData.iloc[index,9]
-        return Lon
-    else:
-        Lat = pageData.iloc[index,8]
-        return Lat
-    
-                
-                
-test = pd.DataFrame(exitBranches)
-exitBranchesDF = test[0].value_counts().reset_index().rename(columns = {'index': 'exitBranchIndex', 0: 'Frequency'})
-exitBranchesDF['Lat'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x))
-exitBranchesDF['Lon'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x, Lon=True))
-exitBranchesDF = exitBranchesDF.dropna()
-
-exitBranchesDF.to_csv('ExitBranchesWLocations.csv')
 
 
 #%%
@@ -844,6 +902,7 @@ heatmapData = ctin.sh.pageData[['Latitude', 'Longitude', 'Frequency']]
 heatmapData.to_csv("heatMapData.csv")
 
 exitPointHeatMap = branchGrp[['Latitude', 'Longitude', 'Frequency']]
+exitPointHeatMap.to_csv("exitPointHeatMapData.csv")
 
 # Next is formatting the graph to generate the routes between nodes
 
@@ -868,15 +927,106 @@ routesDF = pd.DataFrame(routes).rename(columns={0: "RootLat", 1: "RootLon", 2: "
 routesDF = routesDF.dropna()
 routesDF.to_csv("Routes.csv")
 
+# Second one is for exit branches. It holds the branches from the exit points
+# to analyse if these choices were a contributing factor towards users exiting
+# on that branch
+
+exitBranches = []
+for i in branchGrp['ExitBranches'].tolist():
+    for j in i:
+        exitBranches.append(j)
+      
+def getLocationAtIndex(index, Lon=False):  
+    # Gets the right coordinate for the right node
+    if Lon:
+        Lon = pageData.iloc[index,9]
+        return Lon
+    else:
+        Lat = pageData.iloc[index,8]
+        return Lat
+    
+                
+                
+test = pd.DataFrame(exitBranches)
+exitBranchesDF = test[0].value_counts().reset_index().rename(columns = {'index': 'exitBranchIndex', 0: 'Frequency'})
+exitBranchesDF['Lat'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x))
+exitBranchesDF['Lon'] = exitBranchesDF['exitBranchIndex'].apply(lambda x:getLocationAtIndex(x, Lon=True))
+exitBranchesDF = exitBranchesDF.dropna()
+
+def getBaseRoots(value):
+    branches = graph[value]
+    roots = []
+    for i in branches:
+        if i > value:
+            continue
+        else:
+            roots.append(i)
+    return roots
+
+exitBranchesDF['BaseRoot'] = exitBranchesDF['exitBranchIndex'].apply(lambda x : getBaseRoots(x))
+branches = []
 
 
+#exitBranchesDF['BaseRootLat'] = exitBranchesDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x))
+#exitBranchesDF['BaseRootLon'] = exitBranchesDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x, Lon=True))
+#exitBranchesDF.to_csv('ExitBranchesWLocations.csv')
 
 
+# Third one is just for the branches and their options. 
+branches = []
+for i in branchDF['branchIndex']:
+    for j in graph[int(i)]:
+        if j > i and j != 78:
+            rootLat = pageData.iloc[i,8]
+            rootLon = pageData.iloc[i,9]
+            desLat = pageData.iloc[j,8]
+            desLon = pageData.iloc[j,9]
+            tag = pageData.iloc[j, 10]
 
+            if desLat != np.nan and desLon != np.nan:
+                if rootLat != np.nan and rootLon != np.nan:
+                    branches.append((rootLat, rootLon, desLat, desLon, tag, i, j))
 
+branchesDF = pd.DataFrame(branches).rename(columns={0: "RootLat", 1: "RootLon", 2: 'DesLat', 3: "DesLon", 4: "Tag", 5: "RootIndex", 6: "DesIndex"}).dropna()
 
+branchesDF.to_csv('BranchesWOptionsLocation.csv')
 
+#%% 
 
+# This is for finding out the distance between branches and the branch root
+# ie find out if the user has to backtrack
+
+# This is iterates through all the valid branches and finds their root
+# and adds to an array with their branches
+pairs = []
+for i in exitBranchesDF['exitBranchIndex']:
+    for j in graph[i]:
+        if j != 78 and j < i:
+                for k in graph[i]:
+                    if k != 78 and j!= k:
+                        index = pd.Index(exitBranchesDF['exitBranchIndex']).get_loc(i)
+                        frequency = exitBranchesDF.iloc[index, 1]
+                        pairs.append([j,k,i, frequency])
+        
+#%%
+exitPointPairsDF = pd.DataFrame(pairs).rename(columns={0:"BaseRoot", 1:"Branch", 2: 'Root', 3:"FrequencyExited"})
+exitPointPairsDF['BaseRootLat'] = exitPointPairsDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x))
+exitPointPairsDF['BaseRootLon'] = exitPointPairsDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x, Lon=True))
+exitPointPairsDF['BranchLat'] = exitPointPairsDF['Branch'].apply(lambda x:getLocationAtIndex(x))
+exitPointPairsDF['BranchLon'] = exitPointPairsDF['Branch'].apply(lambda x:getLocationAtIndex(x, Lon=True))
+exitPointPairsDF['Distance'] = exitPointPairsDF.apply(lambda x: haversine(x.BaseRootLat, x.BaseRootLon, x.BranchLat, x.BranchLon), axis=1)
+exitPointPairsDF = exitPointPairsDF.dropna()
+print(orctin.organiseDescribe(exitPointPairsDF['Distance'].describe()))
+print(stats.pearsonr(exitPointPairsDF['Distance'],exitPointPairsDF['FrequencyExited']))
+pairsDF.to_csv("ExitPoints_CheckBackTrack.csv")
+
+#%% 
+
+# Generate a table to convert page index to page id to page name
+
+pageLookUp = pageData[['id', 'name']].reset_index()
+
+pageLookUp.to_csv("PageLookUp.csv")
 
 
 
