@@ -144,11 +144,13 @@ def get_class(NumPage, TotActTime, DistTravelled=None, reachedEndPage=False):
     return classes[z][x][y]
     
 
-
+# Uses the basic classification
 DetectDeepReads['reader class'] = DetectDeepReads.apply(lambda x: get_class(x.pagesRead, x.TotalActiveTime), axis = 1)
-
+# Counts number of each class
 ReaderClass = DetectDeepReads.groupby('reader class').count()
+# Use just one column
 ReaderClass = ReaderClass['user']
+# Saves it as a csv
 ReaderClass.to_csv('ReaderClass.csv')
 
 #%%
@@ -253,14 +255,14 @@ endPages = ["47480a57-3aee-4176-c171-7a02b2572a57",
             ]
 
 test = ctin.validPages
-
+# Checks to see if the page is in the endPage list
 endPageFilter = ctin.validPages.pageId.isin(endPages)
+# Dataframe to hold just the end pages
 UserReachedEnd = ctin.validPages[endPageFilter]
 
 
 # Tests to see if the user reached the end page in a realistic time frame
 timeFrame = "0 days 00:20:04.079000"
-#UserReachedEnd = UserReachedEnd[['user', 'pageId', 'pageName']]
 UserReachedEnd['NextEndDate']= UserReachedEnd.groupby('user')['date'].apply(lambda x: x.shift(-1))
 UserReachedEnd['TimeDifference'] = pd.to_datetime(UserReachedEnd['NextEndDate']) - pd.to_datetime(UserReachedEnd['date'])
 UserReachedEnd['TimeDifference'] = UserReachedEnd['TimeDifference'].fillna(pd.to_timedelta("0 days 00:30:04.079000"))
