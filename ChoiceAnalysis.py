@@ -710,17 +710,19 @@ depthFirst(graph, 0, [])
 
 #%%
 
-validNodes = (shortestNodes())
+validNodes = shortestNodes()
 
 df5 = pd.DataFrame(validNodes)
 # This will require minor alterations. When there are 2 identical nodes with different
 # root nodes, move one of the copied values added by the shortestNodes function
 # into the appropriate column. If I have more time, I'l dedicate it to making 
-# this process more automated.
+# this process more automated. It's the lowest numbered index first
+# ie in this case, it goes 23-20 then 23-21
 # 
 df5.to_csv('locationBasedChoice.csv')
-locationBasedChoice = pd.read_csv('C:/Users/brown/Downloads/locationBasedChoice.csv')
 #%%
+
+
 # Appends them to a list
 pathsToCheck = [byronPath, percyPath, maryPath, johnPath]
 
@@ -792,9 +794,9 @@ aboveThreshold.to_csv('ChoiceAnalysis.csv')
 
 # Retrieves the dataframe from further up, but as it needed manual altering, this 
 # is required
-math = locationBasedChoice.rename(columns={'Closest Choice': 'ClosestChoice','Root Node': 'RootNode','Distance From Root': 'DistanceFromRoot' ,'Root Branches': 'RootBranches','Root Branch Frequency': 'RootBranchFrequency'})
-
-
+locationBasedChoice = pd.read_csv("C:/Users/brown/.spyder-py3/locationBasedChoice.csv")
+locationBasedChoice = locationBasedChoice.rename(columns={'0': 'ClosestChoice', '2': 'RootNode', '1': 'DistanceFromRoot' , '4': 'RootBranches', '3': 'RootBranchFrequency'})
+math = locationBasedChoice
 math['RootBranches'] = math['RootBranches'].apply(lambda x: convertstr(x))
 math['RootBranchFrequency'] = math['RootBranchFrequency'].apply(lambda x: convertstr(x))
 
@@ -827,8 +829,8 @@ import numpy
 # then find their relative distance and the frequency they were visited
 # then find the correlation
 
-choiceDistDF = locationBasedChoice[['Root Node','Root Branch Frequency' ,'Root Branches']]
-choiceDistDF['Distances'] = choiceDistDF['Root Node'].apply(lambda x: checkBranch(x)[0][:-1])
+choiceDistDF = locationBasedChoice[['RootNode','RootBranchFrequency' ,'RootBranches']]
+choiceDistDF['Distances'] = choiceDistDF['RootNode'].apply(lambda x: checkBranch(x)[0][:-1])
 
 # Relative distance = average distance from root to brances - distance from branch to node
 
@@ -842,9 +844,9 @@ def relativeDistance(average, points):
 
 choiceDistDF['RelativeDistance'] = choiceDistDF.apply(lambda x: relativeDistance(x.AverageDistance, x.Distances), axis=1)
 
-choiceDist = choiceDistDF[['Root Branch Frequency', 'RelativeDistance']].rename(columns={'Root Branch Frequency': 'RootBranchFrequency'})
+choiceDist = choiceDistDF[['RootBranchFrequency', 'RelativeDistance']]
 
-choiceDist['RootBranchFrequency'] = choiceDist['RootBranchFrequency'].apply(lambda x: convertstr(x))
+#choiceDist['RootBranchFrequency'] = choiceDist['RootBranchFrequency'].apply(lambda x: convertstr(x))
 
 freq = choiceDist['RootBranchFrequency'].tolist()
 proportions = []
@@ -898,12 +900,21 @@ branchGrp.to_csv('ExitPointBranchs.csv')
 
 # First one is data for use in a heat map
 
-heatmapData = ctin.sh.pageData[['Latitude', 'Longitude', 'Frequency']]
-heatmapData.to_csv("heatMapData.csv")
+exitExclusion = ["893861b0-fa80-483e-ed94-e405e91ee0b6",
+             "5a428f8b-173c-4d48-ce72-b1d137234d5d",
+             "8bf230cc-42fa-4cd2-3eb9-d16480cd7094",
+             "f17e55aa-28d2-4596-3a3b-f4160fec8c37",
+             "1ed5a659-7032-41cf-03e9-82effaf98552",
+            ]
 
-exitPointHeatMap = branchGrp[['Latitude', 'Longitude', 'Frequency']]
-exitPointHeatMap.to_csv("exitPointHeatMapData.csv")
 
+
+checkerFilter = branchGrp[~branchGrp['pageId'].isin(exitExclusion)]
+exitPointHeatMap = checkerFilter[['Latitude', 'Longitude', 'Frequency']]
+exitPointHeatMap.to_csv("exitPointHeatMapData.csv", index=False)
+
+
+#%%
 # Next is formatting the graph to generate the routes between nodes
 
 # To do this, I will iterate through the keys and add them as a tuple containing
@@ -991,6 +1002,12 @@ branchesDF = pd.DataFrame(branches).rename(columns={0: "RootLat", 1: "RootLon", 
 
 branchesDF.to_csv('BranchesWOptionsLocation.csv')
 
+# Filters out all of the mandatory choices and leaves only the choices 
+branchFilter = ctin.sh.pageData['OriginalIndex'].isin(branchesDF['DesIndex'])
+heatmapData = ctin.sh.pageData[branchFilter][['Latitude', 'Longitude', 'Frequency']]
+heatmapData.to_csv("heatMapData.csv")
+
+
 #%% 
 
 # This is for finding out the distance between branches and the branch root
@@ -1005,20 +1022,54 @@ for i in exitBranchesDF['exitBranchIndex']:
                 for k in graph[i]:
                     if k != 78 and j!= k:
                         index = pd.Index(exitBranchesDF['exitBranchIndex']).get_loc(i)
-                        frequency = exitBranchesDF.iloc[index, 1]
-                        pairs.append([j,k,i, frequency])
+                        exitFreq = exitBranchesDF.iloc[index, 1]
+                        branchFreq = pageData.iloc[k, 12]
+                        rootFreq = pageData.iloc[i, 12]
+                        baseRootFreq = pageData.iloc[j,12]
+                        pairs.append([j,k,i, exitFreq, rootFreq, branchFreq, baseRootFreq])
+        
+        
         
 #%%
-exitPointPairsDF = pd.DataFrame(pairs).rename(columns={0:"BaseRoot", 1:"Branch", 2: 'Root', 3:"FrequencyExited"})
+                        
+def getChoiceProportion(num, deno):
+    return num/deno
+
+# What I'm looking at here is if the distance between the base root node and 
+# the branches affect exit points
+    
+# What I mean by base root is best put like this:
+    # A -> B -> C
+    #        -> D
+
+# I'm looking at the distance between A->C and A->D as this will let me know
+# if the player is back tracking. 
+# A in this case is the base root node
+# B would be the root node
+# C and D would be the branches
+
+exitPointPairsDF = pd.DataFrame(pairs).rename(columns={0:"BaseRoot", 1:"Branch", 2: 'Root', 3:"FrequencyExited", 4: "RootFreq", 5: "BranchFreq", 6: "BaseRootFreq"})
 exitPointPairsDF['BaseRootLat'] = exitPointPairsDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x))
 exitPointPairsDF['BaseRootLon'] = exitPointPairsDF['BaseRoot'].apply(lambda x:getLocationAtIndex(x, Lon=True))
 exitPointPairsDF['BranchLat'] = exitPointPairsDF['Branch'].apply(lambda x:getLocationAtIndex(x))
 exitPointPairsDF['BranchLon'] = exitPointPairsDF['Branch'].apply(lambda x:getLocationAtIndex(x, Lon=True))
 exitPointPairsDF['Distance'] = exitPointPairsDF.apply(lambda x: haversine(x.BaseRootLat, x.BaseRootLon, x.BranchLat, x.BranchLon), axis=1)
+
+# ProportionExited is calculated by getting the number of people at the 
+# root node and the number of people who exited at the root node
+exitPointPairsDF['ProportionExited'] = exitPointPairsDF.apply(lambda x: getChoiceProportion(x.FrequencyExited, x.RootFreq), axis=1)
+
+# ProportionPerBranch is calculated by getting the number of people
+# at each branch and dividing them by the number of people at the root node
+exitPointPairsDF['ProportionPerBranch'] = exitPointPairsDF.apply(lambda x: getChoiceProportion(x.BranchFreq, x.RootFreq), axis=1)
+# A proportion of higher than 1 could be explained by a merging of storylines
+# at a node, therefore more people would be able to access it compared to
+# a node in a mirrorworld hypertext pattern for example.
+
 exitPointPairsDF = exitPointPairsDF.dropna()
 print(orctin.organiseDescribe(exitPointPairsDF['Distance'].describe()))
-print(stats.pearsonr(exitPointPairsDF['Distance'],exitPointPairsDF['FrequencyExited']))
-pairsDF.to_csv("ExitPoints_CheckBackTrack.csv")
+print(stats.pearsonr(exitPointPairsDF['Distance'],exitPointPairsDF['ProportionExited']))
+exitPointPairsDF.to_csv("ExitPoints_CheckBackTrack.csv")
 
 #%% 
 

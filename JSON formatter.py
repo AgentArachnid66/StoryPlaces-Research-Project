@@ -12,7 +12,7 @@ def get_file_as_String(fileToConvert):
 
 # Place file path here and run the code to get the formatted JSON file
 # It will be stored as a JSON file local to the project
-fileName = "C:/Users/brown/Downloads/sh.json"
+fileName = "logevent-launchmonthsubset.json"
 
 
 
@@ -21,8 +21,8 @@ dataSet = get_file_as_String(fileName)
 # I used Regular Expressions to replace parts of the data set with the correct
 # formatting counter parts
 idReformatting = re.sub(r'\{\"\$oid\"\:', "", dataSet)
-idReformatting2 = re.sub(r'\}\,', r',', idReformatting)
-dateReformatting = re.sub(r'\{\"\$date\"\:', "", idReformatting2)
+idReformatting = re.sub(r'\}\,', r',', idReformatting)
+dateReformatting = re.sub(r'\{\"\$date\"\:', "", idReformatting)
 dataReformatting = re.sub(r'\"data\"\:\{', "", dateReformatting)
 
 #The first step to convert it into an array that can be read in to a 
@@ -52,7 +52,7 @@ fileNameWOext = os.path.splitext(fileName)[0]
 fileNameWOext = re.sub(r'DataSet\/', r'', fileNameWOext)
 saveFile = "Modified" +fileNameWOext +".json"
 
-
+#%%
 #This final part of the code will save the string as a JSON file
 # As the string is valid JSON already, this won't cause any issues
 # But I had issues when I used json.dump
