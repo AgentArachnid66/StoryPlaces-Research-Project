@@ -10,6 +10,8 @@ import ShelleysHeart as sh
 #%%
 # This cell gets the dataset and loads it into a variable. Much more efficient
 # to do this once instead of doing it every time the program is run.
+
+# INPUT FILE PATH HERE!!
 dataSet = pd.read_json("Modifiedlogevent-launchmonthsubset.json", convert_dates=False)
 dataSet.set_index("_id")
 dataSet['date'] = pd.to_datetime(dataSet['date'])

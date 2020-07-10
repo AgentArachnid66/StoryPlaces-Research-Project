@@ -7,6 +7,8 @@ import re
 import numpy as np
 
 # Opens the data set and loads it in as JSON data
+
+# INPUT FILE PATH HERE!!
 with open("Dataset/sh(1).json") as json_data:
     data = json.load(json_data)
     

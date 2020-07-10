@@ -719,7 +719,7 @@ df5 = pd.DataFrame(validNodes)
 # this process more automated. It's the lowest numbered index first
 # ie in this case, it goes 23-20 then 23-21
 # 
-df5.to_csv('locationBasedChoice.csv')
+#df5.to_csv('locationBasedChoice.csv')
 #%%
 
 
@@ -794,7 +794,7 @@ aboveThreshold.to_csv('ChoiceAnalysis.csv')
 
 # Retrieves the dataframe from further up, but as it needed manual altering, this 
 # is required
-locationBasedChoice = pd.read_csv("C:/Users/brown/.spyder-py3/locationBasedChoice.csv")
+locationBasedChoice = pd.read_csv("locationBasedChoice.csv")
 locationBasedChoice = locationBasedChoice.rename(columns={'0': 'ClosestChoice', '2': 'RootNode', '1': 'DistanceFromRoot' , '4': 'RootBranches', '3': 'RootBranchFrequency'})
 math = locationBasedChoice
 math['RootBranches'] = math['RootBranches'].apply(lambda x: convertstr(x))
@@ -1078,14 +1078,3 @@ exitPointPairsDF.to_csv("ExitPoints_CheckBackTrack.csv")
 pageLookUp = pageData[['id', 'name']].reset_index()
 
 pageLookUp.to_csv("PageLookUp.csv")
-
-
-
-
-
-
-
-
-
-
-

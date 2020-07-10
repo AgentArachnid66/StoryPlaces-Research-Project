@@ -11,10 +11,10 @@ def get_file_as_String(fileToConvert):
     return data
 
 # Place file path here and run the code to get the formatted JSON file
-# It will be stored as a JSON file local to the project
+# It will be stored as a JSON file local to the project. 
+    
+# IMPORTANT - this will not work if the file is not in the same folder as the script
 fileName = "logevent-launchmonthsubset.json"
-
-
 
 dataSet = get_file_as_String(fileName)
 
@@ -52,7 +52,7 @@ fileNameWOext = os.path.splitext(fileName)[0]
 fileNameWOext = re.sub(r'DataSet\/', r'', fileNameWOext)
 saveFile = "Modified" +fileNameWOext +".json"
 
-#%%
+
 #This final part of the code will save the string as a JSON file
 # As the string is valid JSON already, this won't cause any issues
 # But I had issues when I used json.dump
