@@ -13,6 +13,7 @@ import natsort
 
 # Imports the original dataset
 
+# INPUT FILE PATH HERE!!
 dataSet = pd.read_json("Modifiedlogevent-launchsubset.json", convert_dates=False)
 dataSet.set_index("_id")
 
