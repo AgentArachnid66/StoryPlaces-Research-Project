@@ -14,7 +14,7 @@ def get_file_as_String(fileToConvert):
 # It will be stored as a JSON file local to the project. 
     
 # IMPORTANT - this will not work if the file is not in the same folder as the script
-fileName = "logevent-launchmonthsubset.json"
+fileName = ""
 
 dataSet = get_file_as_String(fileName)
 
@@ -60,3 +60,4 @@ with open(saveFile, "w") as f:
     f.write(finalString)
 print("Produced JSON file")
     
+# IMPORTANT this will be saved in the same location as the script
